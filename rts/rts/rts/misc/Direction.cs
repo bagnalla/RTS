@@ -113,6 +113,9 @@ namespace rts
 
         public override bool Equals(object o)
         {
+            if (o == null)
+                return false;
+
             var other = o as Direction;
 
             return (other != null && Angle == other.Angle);

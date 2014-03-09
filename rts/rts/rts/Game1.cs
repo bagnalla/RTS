@@ -6,8 +6,7 @@ namespace rts
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        //[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-       // public static extern bool ClipCursor(ref rcClip);
+        public const bool DEBUG = false;
         
         public static Game1 Game { get; private set; }
         public GameState CurrentGameState { get; private set; }

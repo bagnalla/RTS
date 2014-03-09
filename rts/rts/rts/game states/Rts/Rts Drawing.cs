@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Windows.Forms;
@@ -39,25 +40,28 @@ namespace rts
         static PrimitiveLine line = new PrimitiveLine(GraphicsDevice, 1);
         public override void Draw(SpriteBatch spriteBatch)
         {
-            Game1.Game.DebugMonitor.AddLine("camera position: " + camera.Pos);
-            Game1.Game.DebugMonitor.AddLine("camera zoom: " + camera.Zoom);
-            Game1.Game.DebugMonitor.AddLine("camera rotation: " + camera.Rotation);
-            Game1.Game.DebugMonitor.AddLine("pathfinding usage: " + pathFindingPercentage.ToString("F1") + "%");
-            Game1.Game.DebugMonitor.AddLine("pathfinding queue: " + pathFindQueueSize);
-            //Game1.Game.DebugMonitor.AddLine("time: " + GameTimer.Elapsed.Minutes + ":" + GameTimer.Elapsed.Seconds.ToString("D2"));
-            Game1.Game.DebugMonitor.AddLine("roks: " + Player.Players[1].Roks);
-
-            if (SelectedUnits.Count == 1)
+            if (Game1.DEBUG)
             {
-                Unit unit = SelectedUnits[0] as Unit;
-                if (unit != null)
-                {
-                    if (unit.Commands.Count == 0)
-                        Game1.Game.DebugMonitor.AddLine("idle");
-                    else
-                        Game1.Game.DebugMonitor.AddLine(unit.Commands[0].ToString());
+                Game1.Game.DebugMonitor.AddLine("camera position: " + camera.Pos);
+                Game1.Game.DebugMonitor.AddLine("camera zoom: " + camera.Zoom);
+                Game1.Game.DebugMonitor.AddLine("camera rotation: " + camera.Rotation);
+                Game1.Game.DebugMonitor.AddLine("pathfinding usage: " + pathFindingPercentage.ToString("F1") + "%");
+                Game1.Game.DebugMonitor.AddLine("pathfinding queue: " + pathFindQueueSize);
+                //Game1.Game.DebugMonitor.AddLine("time: " + GameTimer.Elapsed.Minutes + ":" + GameTimer.Elapsed.Seconds.ToString("D2"));
+                Game1.Game.DebugMonitor.AddLine("roks: " + Player.Players[1].Roks);
 
-                    Game1.Game.DebugMonitor.AddLine("ignoring collision: " + unit.IgnoringCollision);
+                if (SelectedUnits.Count == 1)
+                {
+                    Unit unit = SelectedUnits[0] as Unit;
+                    if (unit != null)
+                    {
+                        if (unit.Commands.Count == 0)
+                            Game1.Game.DebugMonitor.AddLine("idle");
+                        else
+                            Game1.Game.DebugMonitor.AddLine(unit.Commands[0].ToString());
+
+                        Game1.Game.DebugMonitor.AddLine("ignoring collision: " + unit.IgnoringCollision);
+                    }
                 }
             }
 
@@ -312,40 +316,58 @@ namespace rts
 
         void drawWayPoints(SpriteBatch spriteBatch)
         {
-            //foreach (RtsObject o in SelectedUnits)
-            foreach (Unit unit in Unit.Units)
+            if (Game1.DEBUG)
             {
-                //Unit unit = o as Unit;
-
-                //if (unit != null && unit.IsMoving && unit.Commands.Count > 1 && unit.Commands[1] is MoveCommand)
-                if (unit != null && unit.IsMoving)
+                //foreach (RtsObject o in SelectedUnits)
+                foreach (Unit unit in Unit.Units)
                 {
-                    line.ClearVectors();
-                    //line.Alpha = .6f;
-                    line.AddVector(unit.CenterPoint);
-                    //foreach (Vector2 v in unit.WayPoints)
-                    //    line.AddVector(v);
-                    foreach (UnitCommand command in unit.Commands)
+                    //Unit unit = o as Unit;
+
+                    //if (unit != null && unit.IsMoving && unit.Commands.Count > 1 && unit.Commands[1] is MoveCommand)
+                    if (unit != null && unit.IsMoving)
                     {
-                        MoveCommand moveCommand = command as MoveCommand;
-
-                        if (moveCommand == null)
-                            continue;
-
-                        if (moveCommand is AttackCommand)
-                            line.Colour = Color.Red * .85f;
-                        else
-                            line.Colour = Color.Green * .85f;
-
-                        foreach (Vector2 v in moveCommand.WayPoints)
-                            line.AddVector(v);
-
-                        line.RenderWithZoom(spriteBatch, camera.Zoom);
                         line.ClearVectors();
-                        line.AddVector(moveCommand.Destination);
-                    }
+                        //line.Alpha = .6f;
+                        line.AddVector(unit.CenterPoint);
+                        //foreach (Vector2 v in unit.WayPoints)
+                        //    line.AddVector(v);
+                        foreach (UnitCommand command in unit.Commands)
+                        {
+                            MoveCommand moveCommand = command as MoveCommand;
 
-                    line.Alpha = .75f;
+                            if (moveCommand == null)
+                                continue;
+
+                            if (moveCommand is AttackCommand)
+                                line.Colour = Color.Red * .85f;
+                            else
+                                line.Colour = Color.Green * .85f;
+
+                            foreach (Vector2 v in moveCommand.WayPoints)
+                                line.AddVector(v);
+
+                            line.RenderWithZoom(spriteBatch, camera.Zoom);
+                            line.ClearVectors();
+                            line.AddVector(moveCommand.Destination);
+                        }
+
+                        line.Alpha = .75f;
+                    }
+                }
+            }
+            else
+            {
+                if (SelectedUnits.Count == 1)
+                {
+                    Unit unit = SelectedUnits[0] as Unit;
+                    if (unit != null && unit.Commands.Count > 0)
+                    {
+                        line.ClearVectors();
+                        line.AddVector(unit.CenterPoint);
+                        foreach (MoveCommand moveCommand in unit.MoveCommands)
+                            line.AddVector(moveCommand.Destination);
+                        line.RenderWithZoom(spriteBatch, camera.Zoom);
+                    }
                 }
             }
         }
@@ -449,6 +471,9 @@ namespace rts
 
         void drawDebugStuff(SpriteBatch spriteBatch)
         {
+            if (!Game1.DEBUG)
+                return;
+
             if (SelectedUnits.Count == 1)
             {
                 Unit unit = SelectedUnits[0] as Unit;

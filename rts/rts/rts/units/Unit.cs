@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Lidgren.Network;
@@ -1679,6 +1680,17 @@ namespace rts
             get
             {
                 return type;
+            }
+        }
+
+        public IEnumerable<MoveCommand> MoveCommands
+        {
+            get
+            {
+                foreach (MoveCommand command in Commands.Where(c => c is MoveCommand))
+                {
+                    yield return command;
+                }
             }
         }
 
