@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Lidgren.Network;
 using Lidgren.Network.Xna;
+using System.Linq;
 
 namespace rts
 {
@@ -10,47 +11,77 @@ namespace rts
     {
         protected static bool paused, allowPause;
 
-
         void cancel()
         {
+            Structure structureToUse = null;
+
             if (activeCommandCard == CommandCard.BarracksCommandCard || activeCommandCard == CommandCard.TownHallCommandCard)
             {
-                Structure structureWithLargestQueue = null;
-                int largest = 0;
-
-                //foreach (RtsObject o in SelectedUnits)
-                for (int i = SelectedUnits.Count - 1; i >= 0; i--)
+                // get list of structures to look at
+                var structures = ((List<RtsObject>)SelectedUnits).Where(o =>
                 {
-                    Structure s = SelectedUnits[i] as Structure;
+                    Structure s = o as Structure;
+                    return (s != null && s.Team == Player.Me.Team && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction);
+                });
 
-                    if (s.Team != Player.Me.Team)
-                        return;
-
-                    if (s != null && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction)
+                // find structure with largest queue
+                // also counts scheduled commands
+                int largestQueueCount = -1;
+                foreach (Structure s in structures)
+                {
+                    int queueCount = s.BuildQueue.Count + Player.Me.CountScheduledStructureCommands(s);
+                    if (queueCount > largestQueueCount)
                     {
-                        if (s.BuildQueue.Count > largest)
+                        structureToUse = s;
+                        largestQueueCount = queueCount;
+                    }
+                }
+
+                // find structure with lowest percent done (and largest queue)
+                float lowestPercentDone = float.MaxValue;
+                foreach (Structure s in structures)
+                {
+                    int queueCount = s.BuildQueue.Count + Player.Me.CountScheduledStructureCommands(s);
+                    if (queueCount == largestQueueCount)
+                    {
+                        if (s.BuildQueue.Count > 0 && s.BuildQueue[0].PercentDone < lowestPercentDone)
                         {
-                            structureWithLargestQueue = s;
-                            largest = s.BuildQueue.Count;
+                            structureToUse = s;
+                            lowestPercentDone = s.BuildQueue[0].PercentDone;
                         }
                     }
                 }
-                if (structureWithLargestQueue != null)
-                    //structureWithLargestQueue.BuildQueue.RemoveAt(structureWithLargestQueue.BuildQueue.Count - 1);
-                    structureWithLargestQueue.RemoveFromBuildQueue(structureWithLargestQueue.BuildQueue.Count - 1);
+                //if (structureToUse != null)
+                //structureToUse.RemoveLastItemInBuildQueue();
             }
             else if (activeCommandCard == CommandCard.UnderConstructionCommandCard)
             {
-                for (int i = SelectedUnits.Count - 1; i >= 0; i--)
+                var structures = ((List<RtsObject>)SelectedUnits).Where(o =>
                 {
-                    Structure structure = SelectedUnits[i] as Structure;
-                    if (structure != null)
+                    Structure s = o as Structure;
+                    return (s != null && s.Team == Player.Me.Team && s.Type == SelectedUnits.ActiveType && s.UnderConstruction);
+                });
+
+                float lowestPercentDone = float.MaxValue;
+                foreach (Structure s in structures)
+                {
+                    if (s.PercentDone < lowestPercentDone)
                     {
-                        if (structure.Team == Player.Me.Team)
-                            structure.Cancel();
-                        break;
+                        structureToUse = s;
+                        lowestPercentDone = s.PercentDone;
                     }
                 }
+
+                //if (structureToUse != null)
+                //   structureToUse.Cancel();
+            }
+            else if (activeCommandCard == CommandCard.WorkerCommandCard)
+                resetCommandCard();
+
+            if (structureToUse != null)
+            {
+                Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureToUse, CommandButtonType.Cancel));
+                transmitStructureCommand(structureToUse, CommandButtonType.Cancel);
             }
         }
 
@@ -631,74 +662,55 @@ namespace rts
                 return;
             }
 
-            // find selected structure with smallest queue
-            // also counts scheduled commands
-            Structure structureWithSmallestQueue = null;
-            int smallest = int.MaxValue;
-            foreach (RtsObject o in SelectedUnits)
+            // get list of structures to look at
+            var structures = ((List<RtsObject>)SelectedUnits).Where(o =>
             {
                 Structure s = o as Structure;
+                return (s != null && s.Team == Player.Me.Team && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction);
+            });
 
-                if (s.Team != Player.Me.Team)
-                    return;
-
-                if (s != null && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction)
+            // find selected structure with smallest queue
+            // also counts scheduled commands
+            Structure structureToUse = null;
+            int smallest = int.MaxValue;
+            foreach (Structure s in structures)
+            {
+                int queueCount = s.BuildQueue.Count + Player.Me.CountScheduledStructureCommands(s);
+                if (queueCount < smallest)
                 {
-                    int queueCount = s.BuildQueue.Count + Player.Me.CountScheduledStructureCommands(s);
-                    if (queueCount < smallest)
-                    {
-                        structureWithSmallestQueue = s;
-                        smallest = queueCount;
-                    }
+                    structureToUse = s;
+                    smallest = queueCount;
                 }
             }
 
             // find structure with highest percent done (and smallest queue)
             float highestPercentDone = 0;
-            foreach (RtsObject o in SelectedUnits)
+            foreach (Structure s in structures)
             {
-                Structure s = o as Structure;
-
-                if (s != null)
+                int queueCount = s.BuildQueue.Count + Player.Me.CountScheduledStructureCommands(s);
+                if (smallest > 0 && queueCount == smallest)
                 {
-                    if (s != null && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction)
+                    if (s.BuildQueue.Count > 0 && s.BuildQueue[0].PercentDone > highestPercentDone)
                     {
-                        if (smallest > 0 && s.BuildQueue.Count == smallest)
-                        {
-                            if (s.BuildQueue[0].PercentDone > highestPercentDone)
-                            {
-                                structureWithSmallestQueue = s;
-                                highestPercentDone = s.BuildQueue[0].PercentDone;
-                            }
-                        }
+                        structureToUse = s;
+                        highestPercentDone = s.BuildQueue[0].PercentDone;
                     }
                 }
             }
 
             // give command to the structure
-            if (structureWithSmallestQueue != null)
+            if (structureToUse != null)
             {
                 //if (structureWithSmallestQueue.AddToBuildQueue(buttonType))
-                if (structureWithSmallestQueue.CanAddToBuildQueue(buttonType))
+                if (structureToUse.CanAddToBuildQueue(buttonType))
                 {
                     //float scheduledTime = gameClock + connection.AverageRoundtripTime;
                     short unitID = Player.Me.UnitIDCounter++;
 
-                    Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureWithSmallestQueue, buttonType, unitID));
+                    Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureToUse, buttonType, unitID));
                     Player.Me.Roks -= buttonType.UnitType.RoksCost;
 
-                    NetOutgoingMessage msg = netPeer.CreateMessage();
-
-                    msg.Write(MessageID.STRUCTURE_COMMAND);
-                    msg.Write(currentScheduleTime);
-                    msg.Write(structureWithSmallestQueue.Team);
-                    msg.Write(structureWithSmallestQueue.ID);
-                    msg.Write(buttonType.ID);
-                    msg.Write(unitID);
-
-                    netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
-
-                    //Player.Me.Roks -= buttonType.UnitType.RoksCost;
+                    transmitStructureCommand(structureToUse, buttonType, unitID);
                 }
             }
         }

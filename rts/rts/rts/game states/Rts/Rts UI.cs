@@ -206,6 +206,8 @@ namespace rts
             }
 
             SimpleButton.AddButtons(CommandCardButtons);
+
+            SimpleButton.Reset();
         }
 
         CommandCard activeCommandCard;
@@ -264,6 +266,8 @@ namespace rts
             }
 
             SimpleButton.AddButtons(CommandCardButtons);
+
+            SimpleButton.Reset();
         }
 
         public void CheckForResetCommandCardWhenStructureCompletes(Structure s)

@@ -103,7 +103,7 @@ namespace rts
                 //    continue;
 
                 //if (unit.IsIdle)
-                    unit.CheckForStatusUpdate(gameTime, netPeer, connection);
+                unit.CheckForStatusUpdate(gameTime, netPeer, connection);
             }
         }
         void checkForStructureStatusUpdates(GameTime gameTime)
@@ -216,8 +216,8 @@ namespace rts
             }
 
             CurrentPing = connection.AverageRoundtripTime;
-            //currentScheduleTime = GameClock + CurrentPing * 2;
-            currentScheduleTime = GameClock + .2f;
+            currentScheduleTime = GameClock + CurrentPing * 2;
+            //currentScheduleTime = GameClock + .2f;
         }
 
         void processUnitMoveCommandBatch(NetIncomingMessage msg)
@@ -261,7 +261,7 @@ namespace rts
                 int wut = 0;
             }
 
-            Player.Players[team].ScheduledActions.Add(new ScheduledStructureCommand(scheduledTime, structure, commandType, unitID)); 
+            Player.Players[team].ScheduledActions.Add(new ScheduledStructureCommand(scheduledTime, structure, commandType, unitID));
         }
 
         void processRallyPointCommand(NetIncomingMessage msg)
@@ -309,8 +309,8 @@ namespace rts
                 //if (unit.IsIdle)
                 if (idle)
                 {
-                    //if (unit.IsIdle)
-                    //    unit.CenterPoint = position;
+                    if (unit.IsIdle)
+                        unit.CenterPoint = position;
 
                     if (!unit.IsIdle)
                         unit.NextCommand();
@@ -387,13 +387,13 @@ namespace rts
         void processResourceStatusUpdate(NetIncomingMessage msg)
         {
             short resourceID = msg.ReadInt16();
-                        short amount = msg.ReadInt16();
+            short amount = msg.ReadInt16();
 
-                        Resource resource = Resource.ResourceArray[resourceID];
-                        if (resource != null)// && amount > resource.Amount)
-                        {
-                            resource.Amount = amount;
-                        }
+            Resource resource = Resource.ResourceArray[resourceID];
+            if (resource != null)// && amount > resource.Amount)
+            {
+                resource.Amount = amount;
+            }
         }
 
         void processUnitAttackCommandBatch(NetIncomingMessage msg)
@@ -625,5 +625,19 @@ namespace rts
                 moveCommand.WayPoints = wayPoints;
             }*/
         //}
+
+        void transmitStructureCommand(Structure s, CommandButtonType commandType, short unitID = short.MinValue)
+        {
+            NetOutgoingMessage msg = netPeer.CreateMessage();
+
+            msg.Write(MessageID.STRUCTURE_COMMAND);
+            msg.Write(currentScheduleTime);
+            msg.Write(s.Team);
+            msg.Write(s.ID);
+            msg.Write(commandType.ID);
+            msg.Write(unitID);
+
+            netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
+        }
     }
 }

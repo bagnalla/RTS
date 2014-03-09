@@ -551,7 +551,6 @@ namespace rts
                         if (placingStructure)
                             break;
                         switchToBuildMenuCommandCard();
-                        SimpleButton.Reset();
                         //placingStructure = false;
                         break;
                     }
@@ -580,7 +579,6 @@ namespace rts
                             placingStructure = true;
                             placingStructureType = ((BuildStructureButtonType)button.Type).StructureType;
                             resetCommandCard();
-                            SimpleButton.Reset();
                         }
                         break;
                     }

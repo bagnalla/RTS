@@ -26,7 +26,7 @@ namespace rts
         int constructionTimeElapsed = 0;
         float constructionHpPerTick;
         float preciseHpCounter;
-        public float PercentDone  { get; private set; }
+        public float PercentDone { get; private set; }
         public StructureCogWheel CogWheel { get; private set; }
 
         public List<BuildQueueItem> BuildQueue = new List<BuildQueueItem>();
@@ -84,22 +84,22 @@ namespace rts
             //((Rts)Game1.Game.CurrentGameState).CogWheels.Add(new StructureCogWheel(this, (int)(Type.Size * Map.TileSize / 2.5f)));
             //if (team == Player.Me.Team)
             //{
-                CogWheel = new StructureCogWheel(this, (int)(type.Size * Rts.map.TileSize / 2.5f));
-                ((Rts)Game1.Game.CurrentGameState).CogWheels.Add(CogWheel);
+            CogWheel = new StructureCogWheel(this, (int)(type.Size * Rts.map.TileSize / 2.5f));
+            ((Rts)Game1.Game.CurrentGameState).CogWheels.Add(CogWheel);
             //}
 
-                foreach (PathNode pathNode in OccupiedPathNodes)
+            foreach (PathNode pathNode in OccupiedPathNodes)
+            {
+                foreach (Unit unit in pathNode.UnitsContained)
                 {
-                    foreach (Unit unit in pathNode.UnitsContained)
+                    if (unit != Builder)
                     {
-                        if (unit != Builder)
-                        {
-                            unit.PushSimple((float)(rand.NextDouble() * MathHelper.TwoPi), Radius * .5f);
-                            //unit.CheckForPush(true);
-                            unit.CheckForWallHit();
-                        }
+                        unit.PushSimple((float)(rand.NextDouble() * MathHelper.TwoPi), Radius * .5f);
+                        //unit.CheckForPush(true);
+                        unit.CheckForWallHit();
                     }
                 }
+            }
         }
 
         void setOccupiedPathNodes()
@@ -332,20 +332,20 @@ namespace rts
 
         public void AddToBuildQueue(ProductionButtonType buttonType, short id)
         {
-                BuildQueue.Add(new BuildQueueItem(buttonType, id, buttonType.BuildTime));
+            BuildQueue.Add(new BuildQueueItem(buttonType, id, buttonType.BuildTime));
 
-                if (BuildQueue.Count == 1)
+            if (BuildQueue.Count == 1)
+            {
+                BuildUnitButtonType unitButtonType = BuildQueue[0].Type as BuildUnitButtonType;
+                if (unitButtonType != null)
                 {
-                    BuildUnitButtonType unitButtonType = BuildQueue[0].Type as BuildUnitButtonType;
-                    if (unitButtonType != null)
+                    if (Player.Players[Team].CurrentSupply + unitButtonType.UnitType.SupplyCost <= Player.Players[Team].MaxSupply)
                     {
-                        if (Player.Players[Team].CurrentSupply + unitButtonType.UnitType.SupplyCost <= Player.Players[Team].MaxSupply)
-                        {
-                            Player.Players[Team].CurrentSupply += unitButtonType.UnitType.SupplyCost;
-                            BuildQueue[0].Started = true;
-                        }
+                        Player.Players[Team].CurrentSupply += unitButtonType.UnitType.SupplyCost;
+                        BuildQueue[0].Started = true;
                     }
                 }
+            }
         }
 
         public bool CanAddToBuildQueue(ProductionButtonType buttonType)
@@ -410,6 +410,14 @@ namespace rts
                 BuildQueue[1].Started = true;
 
             BuildQueue.RemoveAt(index);
+        }
+
+        public void RemoveLastItemInBuildQueue()
+        {
+            if (BuildQueue.Count == 0)
+                return;
+
+            RemoveFromBuildQueue(BuildQueue.Count - 1);
         }
 
         void updateBuildQueue(GameTime gameTime)

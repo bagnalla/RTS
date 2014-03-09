@@ -16,7 +16,7 @@ namespace rts
     public partial class Rts : GameState
     {
         public static float GameSpeed = 1f;//2.5f;
-        public static float MusicVolume = .2f;
+        public static float MusicVolume = 0;//.2f;
         public const float COUNTDOWN_TIME = 10f;
 
         public static GameTime gameTime;
@@ -26,7 +26,7 @@ namespace rts
 
         double timeForPathFindingProfiling, pathFindingPercentage;
         int pathFindQueueSize;
-        
+
         static Song rtsMusic;
         static SoundEffect errorSoundEffect;
 
@@ -371,7 +371,7 @@ namespace rts
             checkForCommands();
             SimpleButton.UpdateAll(mouseState, keyboardState);
             checkHotKeyGroups(gameTime);
-            
+
             checkForLeftClick(gameTime);
             checkForRightClick();
             checkForTab();
@@ -732,6 +732,13 @@ namespace rts
                                     rallyPointCommand.Structure.RallyPoints.Clear();
 
                                 rallyPointCommand.Structure.RallyPoints.Add(new RallyPoint(rallyPointCommand.Point, (Resource)rallyPointCommand.Target));
+                            }
+                            else if (scheduledStructureCommand.CommandType == CommandButtonType.Cancel)
+                            {
+                                if (scheduledStructureCommand.Structure.UnderConstruction)
+                                    scheduledStructureCommand.Structure.Cancel();
+                                else
+                                    scheduledStructureCommand.Structure.RemoveLastItemInBuildQueue();
                             }
                             else
                                 scheduledStructureCommand.Structure.AddToBuildQueue((ProductionButtonType)scheduledStructureCommand.CommandType, scheduledStructureCommand.ID);

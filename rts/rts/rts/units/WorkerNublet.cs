@@ -72,7 +72,7 @@ namespace rts
                 {
                     lastWayPoint = wayPoint;
                     //if (command.WayPoints.Count > 2)
-                        command.NextWayPoint(this, Rts.pathFinder);
+                    command.NextWayPoint(this, Rts.pathFinder);
                     return;
                 }
             }
@@ -85,7 +85,7 @@ namespace rts
                     HasMoved = true;
 
                     lastWayPoint = wayPoint;
-                    
+
                     //nextCommand();
                     if (!buildStructure(command))
                     {
@@ -190,7 +190,7 @@ namespace rts
                     lastWayPoint = wayPoint;
 
                     //if (harvest(command.TargetResource))
-                        //nextCommand();
+                    //nextCommand();
                     Resource targetResource = command.TargetResource;
                     if (targetResource == null || targetResource.Depleted)
                     {
@@ -290,8 +290,8 @@ namespace rts
 
             //if (Commands.Count > 1)
             //{
-                NextCommand();
-                //return;
+            NextCommand();
+            //return;
             //}
 
             /*TownHall townHall = findNearestTownHall();

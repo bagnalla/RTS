@@ -19,39 +19,19 @@ namespace rts
         private static readonly Direction[] intercardinals = new Direction[] { northEast, northWest, southEast, southWest };
         private static readonly Direction[] directions = new Direction[] { north, south, west, east, northEast, northWest, southEast, southWest };
 
-        float angle, x, y;
-
         private Direction(float angle)
         {
-            this.angle = MathHelper.WrapAngle(MathHelper.ToRadians(angle));
-            x = (float)Math.Cos(this.angle);
-            y = (float)Math.Sin(this.angle);
+            Angle = MathHelper.WrapAngle(MathHelper.ToRadians(angle));
+            X = (float)Math.Cos(Angle);
+            Y = (float)Math.Sin(Angle);
         }
 
         // call at game initialization to load class early
         public static void Init() { }
 
-        public float Angle
-        {
-            get
-            {
-                return angle;
-            }
-        }
-        public float X
-        {
-            get
-            {
-                return x;
-            }
-        }
-        public float Y
-        {
-            get
-            {
-                return y;
-            }
-        }
+        public float Angle { get; private set; }
+        public float X { get; private set; }
+        public float Y { get; private set; }
 
         public static Direction North
         {
@@ -133,13 +113,13 @@ namespace rts
 
         public override bool Equals(object o)
         {
-            //if (!(o is Direction))
-            //    return false;
-            return angle == ((Direction)o).angle;
+            var other = o as Direction;
+
+            return (other != null && Angle == other.Angle);
         }
         public override int GetHashCode()
         {
-            return (int)(angle * 100);
+            return (int)(Angle * 100);
         }
 
         public static bool operator ==(Direction d1, Direction d2)

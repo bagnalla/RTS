@@ -1246,6 +1246,7 @@ namespace rts
                 spriteBatch.DrawString(unitInfoHpFont, hpString, new Vector2((int)(unitPictureRectangle.X + unitPictureRectangle.Width / 2 - hpSize.X / 2), hpPosY), Color.White);
 
                 Unit unit = o as Unit;
+                UnitType unitType = SelectedUnits.ActiveType as UnitType;
                 if (unit != null)
                 {
                     // kill count
@@ -1294,7 +1295,7 @@ namespace rts
                     // move speed
                     int moveSpeedPosY = (int)(armorPosY + armorSize.Y + statsSpacing);
                     Vector2 moveSpeedSize = unitInfoHpFont.MeasureString(unit.Speed.ToString());
-                    spriteBatch.DrawString(unitInfoHpFont, unit.Speed.ToString(), new Vector2(statsPosX, moveSpeedPosY), Color.LightBlue);
+                    spriteBatch.DrawString(unitInfoHpFont, unitType.MoveSpeed.ToString(), new Vector2(statsPosX, moveSpeedPosY), Color.LightBlue);
                     spriteBatch.DrawString(unitInfoHpFont, " move speed.", new Vector2((int)(statsPosX + moveSpeedSize.X), moveSpeedPosY), Color.White);
                 }
 

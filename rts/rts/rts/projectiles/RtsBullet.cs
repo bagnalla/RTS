@@ -103,6 +103,8 @@ namespace rts
             MeleeBullet.Textures[0] = Game1.Game.Content.Load<Texture2D>("boxingglove");
         }
 
+        BulletType() { }
+
         public Texture2D[] Textures { get; private set; }
     }
 }

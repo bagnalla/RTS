@@ -63,7 +63,7 @@ namespace rts
         public void Add(RtsObject o)
         {
             //if (!objects.Contains(o))
-                objects.Add(o);
+            objects.Add(o);
             sortSelection();
 
             RtsObjectType type = o.Type;

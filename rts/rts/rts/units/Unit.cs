@@ -66,7 +66,7 @@ namespace rts
             SelectionSortValue = type.SelectionSortValue;
             TargetPriority = type.TargetPriority;
             //Player.Players[Team].CurrentSupply += type.SupplyCost;
-            
+
             AddUnit(this);
             //InitializeCurrentPathNode();
         }
@@ -161,9 +161,9 @@ namespace rts
 
             //if (!CurrentPathNode.Tile.Walkable)
             //if (!PathFinder.IsTileWalkable(CurrentPathNode.Tile.Y, CurrentPathNode.Tile.X, this))
-                //CurrentPathNode = PathFinder.FindNearestPathNode(y, x);
-                //CurrentPathNode = PathFinder.FindNearestPathNode(y, x, this);
-                //checkForWallHit();
+            //CurrentPathNode = PathFinder.FindNearestPathNode(y, x);
+            //CurrentPathNode = PathFinder.FindNearestPathNode(y, x, this);
+            //checkForWallHit();
 
             //if (type == UnitType.MeleeNublet)
             //    Diameter += .25f;
@@ -205,7 +205,7 @@ namespace rts
                 }
             }
             //-------------------------------------------------------------------------------
-            
+
             /*foreach (PathNode neighbor in CurrentPathNode.Neighbors)
             {
                 //if (Vector2.Distance(centerPoint, neighbor.Tile.CenterPoint) < Diameter)
@@ -372,13 +372,13 @@ namespace rts
                 //{
                 //    if (attackCommand.HoldPosition)
                 //        GiveCommand(new HoldPositionCommand());
-                 //   else
+                //   else
                 //        nextCommand();
                 //}
                 //else
                 //{
-                    Attack(attackCommand, gameTime);
-                    performAttackIfStarted(attackCommand);
+                Attack(attackCommand, gameTime);
+                performAttackIfStarted(attackCommand);
                 //}
             }
             else if (command is AttackMoveCommand)
@@ -470,7 +470,7 @@ namespace rts
                     msg.Write(centerPoint.Y);
                     msg.Write(Rotation);
                     msg.Write(IsIdle);
-                    
+
                     // send current command ID, -1 if none
                     if (Commands.Count > 0)
                         msg.Write(Commands[0].ID);
@@ -516,7 +516,7 @@ namespace rts
             //Player.Players[Team].UnitCommands.Remove(lastCommand);
 
             IgnoringCollision = false;
-            
+
             MoveCommand lastMoveCommand = lastCommand as MoveCommand;
             if (lastMoveCommand != null)
             {
@@ -560,7 +560,7 @@ namespace rts
                 if (Commands.Count > 1)
                 {
                     //for (int i = 1; i < Commands.Count - 1; i++)
-                     //   Player.Players[Team].UnitCommands.Remove(Commands[i]);
+                    //   Player.Players[Team].UnitCommands.Remove(Commands[i]);
                     Commands.RemoveRange(1, Commands.Count - 1);
                 }
                 return;
@@ -621,11 +621,11 @@ namespace rts
 
             //AttackCommand attackCommand = command as AttackCommand;
             //if (attackCommand != null)
-                //PathFinder.AddHighPriorityPathFindRequest(this, command, CurrentPathNode, commandPriority, false);
+            //PathFinder.AddHighPriorityPathFindRequest(this, command, CurrentPathNode, commandPriority, false);
             //else
 
             //if (Team == Player.Me.Team)
-                //PathFinder.AddHighPriorityPathFindRequest(command, commandPriority, false);
+            //PathFinder.AddHighPriorityPathFindRequest(command, commandPriority, false);
 
             // look for target if attack move command
             if (command is AttackMoveCommand)
@@ -791,7 +791,7 @@ namespace rts
 
             turnTowards(target, 100 / radius, gameTime);
         }*/
-        
+
         void Move(MoveCommand command, GameTime gameTime)
         {
             checkForSmoothPath(command, gameTime);
@@ -801,12 +801,8 @@ namespace rts
 
             Vector2 wayPoint = command.WayPoints[0];
 
-            //float moveX = Util.ScaleWithGameTime(speed.X, gameTime);
-            //float moveY = Util.ScaleWithGameTime(speed.Y, gameTime);
             Speed = MathHelper.Min(Speed + Util.ScaleWithGameTime(acceleration, gameTime), MaxSpeed);
             float actualSpeed = Util.ScaleWithGameTime(Speed, gameTime);
-            //float moveX = Util.ScaleWithGameTime(Speed, gameTime);
-            //float moveY = moveX;
 
             if (command.WayPoints.Count > 1)
             {
@@ -819,7 +815,6 @@ namespace rts
             }
             else
             {
-                //Vector2 difference = wayPoint - centerPoint;
                 float distance = Vector2.Distance(wayPoint, centerPoint);
                 if (distance < actualSpeed)
                 {
@@ -827,24 +822,12 @@ namespace rts
                     HasMoved = true;
 
                     lastWayPoint = wayPoint;
-                    //command.NextWayPoint(this, PathFinder);
-                    //if (command.WayPoints.Count == 0)
                     NextCommand();
                     return;
                 }
             }
 
-            //float angle = (float)Math.Atan2(wayPoint.Y - CenterPoint.Y, wayPoint.X - CenterPoint.X);
-            //moveX *= (float)Math.Cos(angle);
-            //moveY *= (float)Math.Sin(angle);
-
-            //lastMove.X = moveX;
-            //lastMove.Y = moveY;
-
             lastMove = new Vector2(wayPoint.X - CenterPoint.X, wayPoint.Y - CenterPoint.Y);
-            //lastMove.Normalize();
-
-            //lastMove *= actualSpeed;
 
             lastMove *= (actualSpeed / lastMove.Length());
 
@@ -859,7 +842,7 @@ namespace rts
             if (checkForPush(command))
                 return;
 
-            if (!turnTowards(wayPoint, 120 / Radius, gameTime))
+            if (!turnTowards(wayPoint, 120 / Radius, gameTime) && !IsHoldingPosition)
             {
                 Speed = MathHelper.Max(Speed - Util.ScaleWithGameTime(acceleration, gameTime), 0);
             }
@@ -894,11 +877,9 @@ namespace rts
                     NextCommand();
                 return;
             }
-            
+
             clearPushStatus();
             clearHitWallStatus();
-
-            //float angle = (float)Math.Atan2(command.Target.CenterPoint.Y - centerPoint.Y, command.Target.CenterPoint.X - centerPoint.X);
 
             float distanceToTarget = Vector2.Distance(centerPoint, command.Target.CenterPoint) - (Radius + command.Target.Radius);
 
@@ -926,14 +907,11 @@ namespace rts
 
                 if (!command.HoldPosition)
                 {
-                    //float moveX = Util.ScaleWithGameTime(speed.X, gameTime);
-                    //float moveY = Util.ScaleWithGameTime(speed.Y, gameTime);
-                    Speed = MathHelper.Min(Speed + acceleration, MaxSpeed);
-                    float moveX = Util.ScaleWithGameTime(Speed, gameTime);
-                    float moveY = moveX;
+                    Speed = MathHelper.Min(Speed + Util.ScaleWithGameTime(acceleration, gameTime), MaxSpeed);
+                    float actualSpeed = Util.ScaleWithGameTime(Speed, gameTime);
 
-                    Vector2 difference = wayPoint - centerPoint;
-                    if (Math.Abs(difference.X) < moveX && Math.Abs(difference.Y) < moveY)
+                    float distance = Vector2.Distance(wayPoint, centerPoint);
+                    if (distance < actualSpeed)
                     {
                         this.CenterPoint = wayPoint;
                         HasMoved = true;
@@ -944,12 +922,10 @@ namespace rts
                         return;
                     }
 
-                    float angle = (float)Math.Atan2(wayPoint.Y - centerPoint.Y, wayPoint.X - centerPoint.X);
-                    moveX *= (float)Math.Cos(angle);
-                    moveY *= (float)Math.Sin(angle);
+                    lastMove = new Vector2(wayPoint.X - CenterPoint.X, wayPoint.Y - CenterPoint.Y);
 
-                    lastMove.X = moveX;
-                    lastMove.Y = moveY;
+                    lastMove *= (actualSpeed / lastMove.Length());
+
                     PrecisePosition += lastMove;
                     HasMoved = true;
                 }
@@ -960,7 +936,7 @@ namespace rts
 
                 command.Destination = command.Target.CenterPoint;
 
-                if (!turnTowards(wayPoint, 120 / Radius, gameTime))
+                if (!turnTowards(wayPoint, 120 / Radius, gameTime) && !IsHoldingPosition)
                 {
                     Speed = MathHelper.Max(Speed - Util.ScaleWithGameTime(acceleration, gameTime), 0);
                 }
@@ -1228,7 +1204,7 @@ namespace rts
                         //{
                         //    PushSimple(angle + (float)Math.PI, force);
                         //}
-                       // else
+                        // else
                         {
                             //pushCount++;
 
@@ -1493,7 +1469,7 @@ namespace rts
                         //if (unit.Team != Team)
                         //    PushSimple(angle, force);
                         //else if (unit.pushCount < 1)
-                            unit.Push(this, angle, force);
+                        unit.Push(this, angle, force);
 
                         //unit.Push(this, angle, force * .1f);
                         //PushSimple(angle + (float)Math.PI, force * .9f);
@@ -1533,7 +1509,7 @@ namespace rts
                     //if (harvestCommand != null)
                     //{
                     pathNodesHit.Add(pathNode);
-                        //return (pathNode.Blocker == ((HarvestCommand)command).TargetResource);
+                    //return (pathNode.Blocker == ((HarvestCommand)command).TargetResource);
                     //}
 
                     if (command != null && timeSinceLastRecalculatePath >= recalculatePathDelay && command.Calculated)

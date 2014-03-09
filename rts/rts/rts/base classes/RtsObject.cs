@@ -104,13 +104,14 @@ namespace rts
 
         public override bool Intersects(BaseObject o)
         {
-            float angle = (float)Math.Atan2(o.CenterPoint.Y - centerPoint.Y, o.CenterPoint.X - centerPoint.X);
-            Vector2 point = centerPoint + new Vector2(Radius * (float)Math.Cos(angle), Radius * (float)Math.Sin(angle));
-            //return o.Touches(point);
+            //float angle = (float)Math.Atan2(o.CenterPoint.Y - centerPoint.Y, o.CenterPoint.X - centerPoint.X);
+            //Vector2 point = centerPoint + new Vector2(Radius * (float)Math.Cos(angle), Radius * (float)Math.Sin(angle));
 
-            return o.Touches(point) || Vector2.DistanceSquared(centerPoint, o.CenterPoint) < RadiusSquared;// || 
-            //((Math.Abs(centerPoint.X - o.X) < radius || Math.Abs(centerPoint.X - (o.X  + o.Width)) < radius) &&
-            //(Math.Abs(centerPoint.Y - o.Y) < radius || Math.Abs(centerPoint.Y - (o.Y + o.Height)) < radius));
+            Vector2 displacement = o.CenterPoint - CenterPoint;
+            displacement.Normalize();
+            Vector2 point = centerPoint + displacement * Radius;
+
+            return o.Touches(point) || Vector2.DistanceSquared(centerPoint, o.CenterPoint) < RadiusSquared;
         }
 
         public float Radius

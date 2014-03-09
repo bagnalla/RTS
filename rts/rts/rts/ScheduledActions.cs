@@ -107,6 +107,19 @@ namespace rts
         }
     }
 
+    /*public class ScheduledStructureCancelProductionCommand : ScheduledAction
+    {
+        public Structure Structure { get; private set; }
+        public short ID { get; private set; }
+
+        public ScheduledStructureCancelProductionCommand(float scheduledTime, Structure structure)
+            : base(scheduledTime)
+        {
+            Structure = structure;
+            CommandType = commandType;
+        }
+    }*/
+
     public class DelayedPathUpdate
     {
         public static List<DelayedPathUpdate> DelayedPathUpdates = new List<DelayedPathUpdate>();
