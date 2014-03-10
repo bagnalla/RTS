@@ -128,8 +128,8 @@ namespace rts
                 client = new NetClient(config);
                 client.Start();
 
-                //client.Configuration.SimulatedMinimumLatency = .5f;
-                //client.Configuration.SimulatedRandomLatency = .01f;
+                client.Configuration.SimulatedMinimumLatency = .08f;
+                client.Configuration.SimulatedRandomLatency = .01f;
 
                 client.DiscoverLocalPeers(14242);
 

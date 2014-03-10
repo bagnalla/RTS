@@ -356,24 +356,7 @@ namespace rts
             // total build queue count including scheduled commands
             int queueCount = BuildQueue.Count + Player.Me.CountScheduledStructureCommands(this);
 
-            if (queueCount < MAX_QUEUE_SIZE)
-            {
-                /*if (queueCount == 1)
-                {
-                    BuildUnitButtonType unitButtonType = BuildQueue[0].Type as BuildUnitButtonType;
-                    if (unitButtonType != null)
-                    {
-                        //Player.Players[Team].CurrentSupply += unitButtonType.UnitType.SupplyCost;
-                        if (Player.Players[Team].CurrentSupply + unitButtonType.UnitType.SupplyCost <= Player.Players[Team].MaxSupply)
-                        {
-                        }
-                    }
-                }*/
-
-                return true;
-            }
-
-            return false;
+            return (queueCount < MAX_QUEUE_SIZE);
         }
 
         public void RemoveFromBuildQueue(int index)
@@ -409,6 +392,10 @@ namespace rts
             else if (BuildQueue.Count > 1)
                 BuildQueue[1].Started = true;
 
+            // if it was a unit, set its ID to null in the player unit array
+            if (BuildQueue[index].Type is BuildUnitButtonType)
+                Player.Players[Team].UnitArray[BuildQueue[index].ID] = null;
+
             BuildQueue.RemoveAt(index);
         }
 
@@ -416,6 +403,10 @@ namespace rts
         {
             if (BuildQueue.Count == 0)
                 return;
+
+            // if it was a unit, set its ID to null in the player unit array
+            if (BuildQueue[BuildQueue.Count - 1].Type is BuildUnitButtonType)
+                Player.Players[Team].UnitArray[BuildQueue[BuildQueue.Count - 1].ID] = null;
 
             RemoveFromBuildQueue(BuildQueue.Count - 1);
         }

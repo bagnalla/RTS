@@ -669,9 +669,10 @@ namespace rts
                 return (s != null && s.Team == Player.Me.Team && s.Type == SelectedUnits.ActiveType && !s.UnderConstruction);
             });
 
+            Structure structureToUse = null;
+
             // find selected structure with smallest queue
             // also counts scheduled commands
-            Structure structureToUse = null;
             int smallest = int.MaxValue;
             foreach (Structure s in structures)
             {
@@ -701,11 +702,10 @@ namespace rts
             // give command to the structure
             if (structureToUse != null)
             {
-                //if (structureWithSmallestQueue.AddToBuildQueue(buttonType))
                 if (structureToUse.CanAddToBuildQueue(buttonType))
                 {
-                    //float scheduledTime = gameClock + connection.AverageRoundtripTime;
-                    short unitID = Player.Me.UnitIDCounter++;
+                    //short unitID = Player.Me.UnitIDCounter++;
+                    short unitID = Player.Me.NextFreeUnitID();
 
                     Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureToUse, buttonType, unitID));
                     Player.Me.Roks -= buttonType.UnitType.RoksCost;

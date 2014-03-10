@@ -18,7 +18,7 @@ namespace rts
         public Texture2D FogTexture;
 
         const int DELAY = 90;
-        
+
         List<ObjectLink<RtsObject, List<MapTile>>> visionLists = new List<ObjectLink<RtsObject, List<MapTile>>>();
         public static List<ObjectLink<RtsObject, List<MapTile>>> PublicVisionLists = new List<ObjectLink<RtsObject, List<MapTile>>>();// = null;
         public static Object PublicLock = new Object();
@@ -52,60 +52,60 @@ namespace rts
                 }
                 //lock (RtsObject.RtsObjects)
                 //{
-                    //foreach (RtsObject unit in RtsObject.RtsObjects)
+                //foreach (RtsObject unit in RtsObject.RtsObjects)
                 foreach (RtsObject unit in objects)
+                {
+                    if (!unit.HasMoved)
+                        continue;
+
+                    //lock (unit.VisibleTiles)
+                    //{
+                    //unit.VisibleTiles.Clear();
+                    List<MapTile> visibleTiles = new List<MapTile>();
+
+                    bool myTeam = (unit.Team == Team);
+
+                    int posX = (int)MathHelper.Clamp(unit.CenterPointX / Map.TileSize - unit.SightRange, 0, Map.Width - 1);
+                    int posY = (int)MathHelper.Clamp(unit.CenterPointY / Map.TileSize - unit.SightRange, 0, Map.Height - 1);
+                    int rightBoundX = (int)MathHelper.Clamp(posX + (int)Math.Ceiling((double)(unit.SightRange * 2)), 0, Map.Width - 1);
+                    int bottomBoundY = (int)MathHelper.Clamp(posY + (int)Math.Ceiling((double)(unit.SightRange * 2)), 0, Map.Height - 1);
+
+                    for (int x = posX; x <= rightBoundX; x++)
                     {
-                        if (!unit.HasMoved)
-                            continue;
+                        for (int y = posY; y <= bottomBoundY; y++)
+                        {
+                            // add tile to visibility array if valid, walkable, and within vision range
+                            //if (!(x < 0 || x >= Map.Width || y < 0 || y >= Map.Height))
+                            {
+                                if (Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) > unit.SightRange * Map.TileSize)
+                                    continue;
+                                //if (!PathFinder.Walkable(unit.CenterPoint, Map.Tiles[y, x].CenterPoint, (int)(Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) / Map.TileSize)))
+                                //    continue;
+                                if (!PathFinder.Tools.IsTileVisible(unit.CenterPoint, Map.Tiles[y, x].CenterPoint, unit, (int)(Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) / Map.TileSize)))
+                                    continue;
 
-                            //lock (unit.VisibleTiles)
-                            //{
-                                //unit.VisibleTiles.Clear();
-                                List<MapTile> visibleTiles = new List<MapTile>();
+                                if (myTeam)
+                                    tiles[y, x] = true;
+                                //unit.VisibleTiles.Add(Map.Tiles[y, x]);
+                                visibleTiles.Add(Map.Tiles[y, x]);
+                            }
+                        }
+                    }
+                    //}
 
-                                bool myTeam = (unit.Team == Team);
+                    //visionLists.Add(new ObjectLink<RtsObject, List<MapTile>>(unit, visibleTiles));
+                    lock (unit.VisibleTiles)
+                    {
+                        //foreach (MapTile tile in unit.VisibleTiles)
+                        //   tile.Visible = false;
 
-                                int posX = (int)MathHelper.Clamp(unit.CenterPointX / Map.TileSize - unit.SightRange, 0, Map.Width - 1);
-                                int posY = (int)MathHelper.Clamp(unit.CenterPointY / Map.TileSize - unit.SightRange, 0, Map.Height - 1);
-                                int rightBoundX = (int)MathHelper.Clamp(posX + (int)Math.Ceiling((double)(unit.SightRange * 2)), 0, Map.Width - 1);
-                                int bottomBoundY = (int)MathHelper.Clamp(posY + (int)Math.Ceiling((double)(unit.SightRange * 2)), 0, Map.Height - 1);
+                        unit.VisibleTiles = visibleTiles;
 
-                                for (int x = posX; x <= rightBoundX; x++)
-                                {
-                                    for (int y = posY; y <= bottomBoundY; y++)
-                                    {
-                                        // add tile to visibility array if valid, walkable, and within vision range
-                                        //if (!(x < 0 || x >= Map.Width || y < 0 || y >= Map.Height))
-                                        {
-                                            if (Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) > unit.SightRange * Map.TileSize)
-                                                continue;
-                                            //if (!PathFinder.Walkable(unit.CenterPoint, Map.Tiles[y, x].CenterPoint, (int)(Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) / Map.TileSize)))
-                                            //    continue;
-                                            if (!PathFinder.Tools.IsTileVisible(unit.CenterPoint, Map.Tiles[y, x].CenterPoint, unit, (int)(Vector2.Distance(unit.CenterPoint, Map.Tiles[y, x].CenterPoint) / Map.TileSize)))
-                                                continue;
+                        // foreach (MapTile tile in unit.VisibleTiles)
+                        //    tile.Visible = true;
 
-                                            if (myTeam)
-                                                tiles[y, x] = true;
-                                            //unit.VisibleTiles.Add(Map.Tiles[y, x]);
-                                            visibleTiles.Add(Map.Tiles[y, x]);
-                                        }
-                                    }
-                                }
-                            //}
-
-                            //visionLists.Add(new ObjectLink<RtsObject, List<MapTile>>(unit, visibleTiles));
-                                lock (unit.VisibleTiles)
-                                {
-                                    //foreach (MapTile tile in unit.VisibleTiles)
-                                     //   tile.Visible = false;
-
-                                    unit.VisibleTiles = visibleTiles;
-
-                                   // foreach (MapTile tile in unit.VisibleTiles)
-                                    //    tile.Visible = true;
-
-                                    unit.HasMoved = false;
-                                }
+                        unit.HasMoved = false;
+                    }
                     //}
                 }
 

@@ -15,8 +15,8 @@ namespace rts
 {
     public partial class Rts : GameState
     {
-        public static float GameSpeed = 1f;//2.5f;
-        public static float MusicVolume = 0;//.2f;
+        public static float GameSpeed = 2f;//2.5f;
+        public static float MusicVolume = .2f;
         public const float COUNTDOWN_TIME = 10f;
 
         public static GameTime gameTime;
@@ -333,21 +333,24 @@ namespace rts
             Player.SetNullIDS();
 
             // pathfinding performance info
-            timeForPathFindingProfiling += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (timeForPathFindingProfiling >= 500)
+            if (Game1.DEBUG)
             {
-                double pathFindingTime;
-                lock (Rts.pathFinder.TimeSpentPathFindingLock)
+                timeForPathFindingProfiling += gameTime.ElapsedGameTime.TotalMilliseconds;
+                if (timeForPathFindingProfiling >= 500)
                 {
-                    pathFindingTime = Rts.pathFinder.TimeSpentPathFinding.TotalMilliseconds;
-                    Rts.pathFinder.TimeSpentPathFinding = TimeSpan.Zero;
-                }
-                pathFindingPercentage = pathFindingTime / timeForPathFindingProfiling * 100;
-                timeForPathFindingProfiling = 0;
+                    double pathFindingTime;
+                    lock (Rts.pathFinder.TimeSpentPathFindingLock)
+                    {
+                        pathFindingTime = Rts.pathFinder.TimeSpentPathFinding.TotalMilliseconds;
+                        Rts.pathFinder.TimeSpentPathFinding = TimeSpan.Zero;
+                    }
+                    pathFindingPercentage = pathFindingTime / timeForPathFindingProfiling * 100;
+                    timeForPathFindingProfiling = 0;
 
-                lock (PathFindRequest.HighPriorityPathFindRequests)
-                {
-                    pathFindQueueSize = PathFindRequest.HighPriorityPathFindRequests.Count;
+                    lock (PathFindRequest.HighPriorityPathFindRequests)
+                    {
+                        pathFindQueueSize = PathFindRequest.HighPriorityPathFindRequests.Count;
+                    }
                 }
             }
 
@@ -357,7 +360,8 @@ namespace rts
             {
                 //Game1.Game.Window.Title = "FPS: " + (frameCounter > 2 ? frameCounter.ToString() : "COOL");
                 fpsMessage = "FPS: " + (frameCounter > 2 ? frameCounter.ToString() : "COOL");
-                fpsMessage += " - Unit count: " + Unit.Units.Count;
+                if (Game1.DEBUG)
+                    fpsMessage += " - Unit count: " + Unit.Units.Count;
                 fpsElapsedTime -= TimeSpan.FromSeconds(1);
                 frameCounter = 0;
             }

@@ -43,7 +43,6 @@ namespace rts
         float countDownTime = COUNTDOWN_TIME;
         bool countingDown = true;
 
-
         float timeSinceLastCheckup, checkupDelay = .5f;
         void checkToCheckup(GameTime gameTime)
         {
@@ -75,6 +74,7 @@ namespace rts
                     NetOutgoingMessage msg = netPeer.CreateMessage();
                     msg.Write(MessageID.SYNC);
                     msg.Write(GameClock);
+                    msg.Write(connection.AverageRoundtripTime);
                     netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableSequenced, 0);
                 }
             }
@@ -119,7 +119,7 @@ namespace rts
         // resource status updates are handled by the resources themselves
 
         float timeSinceMessageReceived, timeOutDelay = .53f;
-        float CurrentPing;
+        float CurrentPing, OtherClientPing;
         bool waitingForMessage;
         void receiveData(GameTime gameTime)
         {
@@ -134,13 +134,18 @@ namespace rts
                 timeSinceMessageReceived = 0f;
                 waitingForMessage = false;
 
+                CurrentPing  = MathHelper.Max(connection.AverageRoundtripTime, OtherClientPing);
+                currentScheduleTime = GameClock + CurrentPing * 1.5f;
+                //currentScheduleTime = GameClock + .2f;
+                timeOutDelay = MathHelper.Max(.53f, CurrentPing * 1.2f);
+
                 if (msg.MessageType == NetIncomingMessageType.Data)
                 {
                     byte id = msg.ReadByte();
 
                     if (id == MessageID.SYNC)
                     {
-                        GameClock = msg.ReadFloat() + connection.AverageRoundtripTime / 2f;
+                        processSync(msg);
                     }
                     else if (id == MessageID.UNIT_MOVE_COMMAND_BATCH)
                     {
@@ -214,10 +219,13 @@ namespace rts
 
                 netPeer.Recycle(msg);
             }
+        }
 
-            CurrentPing = connection.AverageRoundtripTime;
-            currentScheduleTime = GameClock + CurrentPing * 2;
-            //currentScheduleTime = GameClock + .2f;
+        void processSync(NetIncomingMessage msg)
+        {
+            GameClock = msg.ReadFloat() + connection.AverageRoundtripTime / 2f;
+            OtherClientPing = msg.ReadFloat();
+            CurrentPing = MathHelper.Max(CurrentPing, OtherClientPing);
         }
 
         void processUnitMoveCommandBatch(NetIncomingMessage msg)

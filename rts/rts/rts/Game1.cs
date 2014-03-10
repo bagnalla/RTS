@@ -6,7 +6,7 @@ namespace rts
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        public const bool DEBUG = false;
+        public const bool DEBUG = true;
         
         public static Game1 Game { get; private set; }
         public GameState CurrentGameState { get; private set; }
@@ -30,8 +30,10 @@ namespace rts
             //Graphics.PreferredBackBufferHeight = 740;
             //Graphics.PreferredBackBufferWidth = 1280;
             //Graphics.PreferredBackBufferHeight = 720;
+
             Graphics.PreferredBackBufferWidth = 1024;
             Graphics.PreferredBackBufferHeight = 576;
+            //Graphics.IsFullScreen = true;
             Graphics.ApplyChanges();
 
             Window.Title = "";

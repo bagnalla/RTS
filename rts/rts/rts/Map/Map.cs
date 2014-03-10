@@ -9,11 +9,13 @@ namespace rts
         List<KeyValuePair<Point, int>> resources = new List<KeyValuePair<Point, int>>();
         public List<Point> StartingPoints = new List<Point>();
 
-        MapTile[,] tiles;
+        public MapTile[,] Tiles { get; private set; }
         public BoundingBox[,] BigBoundingBoxes;
         public const int BOUNDING_BOX_SIZE = 8;
         int tileSize = 20;
-        int width, height;
+        public int TileSize { get { return tileSize; } }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         public Map(string mapFilepath)
         {
@@ -26,14 +28,14 @@ namespace rts
             string[] lines = File.ReadAllLines(mapFilePath);
 
             string[] widthAndHeight = lines[0].Split(' ');
-            width = int.Parse(widthAndHeight[0]);
-            height = int.Parse(widthAndHeight[1]);
+            Width = int.Parse(widthAndHeight[0]);
+            Height = int.Parse(widthAndHeight[1]);
             int numberOfResources = int.Parse(widthAndHeight[2]);
             int numberOfStartingPoints = int.Parse(widthAndHeight[3]);
 
-            tiles = new MapTile[height, width];
+            Tiles = new MapTile[Height, Width];
 
-            int endOfTileLines = height,
+            int endOfTileLines = Height,
                 endOfResourceLines = endOfTileLines + numberOfResources,
                 endOfStartingPointLines = endOfResourceLines + numberOfStartingPoints;
 
@@ -41,13 +43,13 @@ namespace rts
             {
                 string[] rowOfTiles = lines[i].Split(' ');
 
-                for (int s = 0; s < width; s++)
+                for (int s = 0; s < Width; s++)
                 {
                     int typeCode = int.Parse(rowOfTiles[s].Substring(0, 1));
                     int pathingCode = int.Parse(rowOfTiles[s].Substring(1, 1));
-                    tiles[i - 1, s] = new MapTile(s, (i - 1), tileSize, tileSize, typeCode, pathingCode);
+                    Tiles[i - 1, s] = new MapTile(s, (i - 1), tileSize, tileSize, typeCode, pathingCode);
                     //if (pathingCode == 1)
-                    //    Walls.Add(tiles[i - 1, s]);
+                    //    Walls.Add(Tiles[i - 1, s]);
                 }
             }
 
@@ -104,50 +106,50 @@ namespace rts
 
         void calculateTileNeighbors()
         {
-            for (int i = 0; i < height; i++)
+            for (int i = 0; i < Height; i++)
             {
-                for (int s = 0; s < width; s++)
+                for (int s = 0; s < Width; s++)
                 {
-                    MapTile tile = tiles[i, s];
+                    MapTile tile = Tiles[i, s];
 
                     if (i - 1 >= 0)
                     {
-                        MapTile neighbor = tiles[i - 1, s];
+                        MapTile neighbor = Tiles[i - 1, s];
                         tile.Neighbors.Add(neighbor);
                     }
-                    if (i + 1 < height)
+                    if (i + 1 < Height)
                     {
-                        MapTile neighbor = tiles[i + 1, s];
+                        MapTile neighbor = Tiles[i + 1, s];
                         tile.Neighbors.Add(neighbor);
                     }
                     if (s - 1 >= 0)
                     {
-                        MapTile neighbor = tiles[i, s - 1];
+                        MapTile neighbor = Tiles[i, s - 1];
                         tile.Neighbors.Add(neighbor);
                     }
-                    if (s + 1 < width)
+                    if (s + 1 < Width)
                     {
-                        MapTile neighbor = tiles[i, s + 1];
+                        MapTile neighbor = Tiles[i, s + 1];
                         tile.Neighbors.Add(neighbor);
                     }
                     if (i - 1 >= 0 && s - 1 >= 0)
                     {
-                        MapTile neighbor = tiles[i - 1, s - 1];
+                        MapTile neighbor = Tiles[i - 1, s - 1];
                         tile.Neighbors.Add(neighbor);
                     }
-                    if (i - 1 >= 0 && s + 1 < width)
+                    if (i - 1 >= 0 && s + 1 < Width)
                     {
-                        MapTile neighbor = tiles[i - 1, s + 1];
+                        MapTile neighbor = Tiles[i - 1, s + 1];
                         tile.Neighbors.Add(neighbor);
                     }
-                    if (i + 1 < height && s - 1 >= 0)
+                    if (i + 1 < Height && s - 1 >= 0)
                     {
-                        MapTile neighbor = tiles[i + 1, s - 1];
+                        MapTile neighbor = Tiles[i + 1, s - 1];
                         tile.Neighbors.Add(neighbor);
                     }
-                    if (i + 1 < height && s + 1 < width)
+                    if (i + 1 < Height && s + 1 < Width)
                     {
-                        MapTile neighbor = tiles[i + 1, s + 1];
+                        MapTile neighbor = Tiles[i + 1, s + 1];
                         tile.Neighbors.Add(neighbor);
                     }
                 }
@@ -157,9 +159,9 @@ namespace rts
         // find centerpoint of nearest walkable tile from given vector
         public Vector2 FindNearestWalkableTile(Vector2 point)
         {
-            int y = (int)MathHelper.Clamp(point.Y / tileSize, 0, height - 1);
-            int x = (int)MathHelper.Clamp(point.X / tileSize, 0, width - 1);
-            MapTile tile = tiles[y, x];
+            int y = (int)MathHelper.Clamp(point.Y / tileSize, 0, Height - 1);
+            int x = (int)MathHelper.Clamp(point.X / tileSize, 0, Width - 1);
+            MapTile tile = Tiles[y, x];
 
             if (tile.Walkable)
                 return tile.CenterPoint;
@@ -185,25 +187,25 @@ namespace rts
 
             if (howFarLeft == biggest && x - 1 >= 0)
             {
-                neighbor = tiles[y, x - 1];
+                neighbor = Tiles[y, x - 1];
                 if (neighbor.Walkable)
                     return neighbor.CenterPoint;
             }
-            else if (howFarRight == biggest && x + 1 < width)
+            else if (howFarRight == biggest && x + 1 < Width)
             {
-                neighbor = tiles[y, x + 1];
+                neighbor = Tiles[y, x + 1];
                 if (neighbor.Walkable)
                     return neighbor.CenterPoint;
             }
             else if (howFarUp == biggest && y - 1 >= 0)
             {
-                neighbor = tiles[y - 1, x];
+                neighbor = Tiles[y - 1, x];
                 if (neighbor.Walkable)
                     return neighbor.CenterPoint;
             }
-            else if (howFarDown == biggest && y + 1 < height)
+            else if (howFarDown == biggest && y + 1 < Height)
             {
-                neighbor = tiles[y + 1, x];
+                neighbor = Tiles[y + 1, x];
                 if (neighbor.Walkable)
                     return neighbor.CenterPoint;
             }
@@ -213,49 +215,49 @@ namespace rts
             {
                 if (y - i >= 0)
                 {
-                    neighbor = tiles[y - i, x];
+                    neighbor = Tiles[y - i, x];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
-                if (y + i < height)
+                if (y + i < Height)
                 {
-                    neighbor = tiles[y + i, x];
+                    neighbor = Tiles[y + i, x];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
                 if (x - i >= 0)
                 {
-                    neighbor = tiles[y, x - i];
+                    neighbor = Tiles[y, x - i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
-                if (x + i < width)
+                if (x + i < Width)
                 {
-                    neighbor = tiles[y, x + i];
+                    neighbor = Tiles[y, x + i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
                 if (y - i >= 0 && x - i >= 0)
                 {
-                    neighbor = tiles[y - i, x - i];
+                    neighbor = Tiles[y - i, x - i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
-                if (y - i >= 0 && x + i < width)
+                if (y - i >= 0 && x + i < Width)
                 {
-                    neighbor = tiles[y - i, x + i];
+                    neighbor = Tiles[y - i, x + i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
-                if (y + i < height && x - i >= 0)
+                if (y + i < Height && x - i >= 0)
                 {
-                    neighbor = tiles[y + i, x - i];
+                    neighbor = Tiles[y + i, x - i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
-                if (y + i < height && x + i < width)
+                if (y + i < Height && x + i < Width)
                 {
-                    neighbor = tiles[y + i, x + i];
+                    neighbor = Tiles[y + i, x + i];
                     if (neighbor.Walkable)
                         return neighbor.CenterPoint;
                 }
@@ -265,38 +267,7 @@ namespace rts
         public void UpdateBoundingBoxes()
         {
             foreach (BoundingBox box in BigBoundingBoxes)
-            {
                 box.Update();
-            }
-        }
-
-        public int Width
-        {
-            get
-            {
-                return width;
-            }
-        }
-        public int Height
-        {
-            get
-            {
-                return height;
-            }
-        }
-        public MapTile[,] Tiles
-        {
-            get
-            {
-                return tiles;
-            }
-        }
-        public int TileSize
-        {
-            get
-            {
-                return tileSize;
-            }
         }
     }
 }

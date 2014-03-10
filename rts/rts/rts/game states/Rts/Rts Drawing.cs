@@ -143,9 +143,9 @@ namespace rts
             Vector2 button1TextSize = fpsFont.MeasureString("1");
             spriteBatch.DrawString(fpsFont, "1", new Vector2((int)(button1.X + button1.Width / 2 - button1TextSize.X / 2), (int)(button1.Y + button1.Height / 2 - button1TextSize.Y / 2)), Color.White);
             */
-            spriteBatch.Draw(buttonTexture, button2.Rectangle, Color.White);
-            Vector2 button2TextSize = fpsFont.MeasureString("10");
-            spriteBatch.DrawString(fpsFont, "10", new Vector2((int)(button2.X + button2.Width / 2 - button2TextSize.X / 2), (int)(button2.Y + button2.Height / 2 - button2TextSize.Y / 2)), Color.White);
+            //spriteBatch.Draw(buttonTexture, button2.Rectangle, Color.White);
+            //Vector2 button2TextSize = fpsFont.MeasureString("10");
+            //spriteBatch.DrawString(fpsFont, "10", new Vector2((int)(button2.X + button2.Width / 2 - button2TextSize.X / 2), (int)(button2.Y + button2.Height / 2 - button2TextSize.Y / 2)), Color.White);
             /*spriteBatch.Draw(buttonTexture, button3, Color.White);
             Vector2 button3TextSize = fpsFont.MeasureString("FS");
             spriteBatch.DrawString(fpsFont, "FS", new Vector2((int)(button3.X + button3.Width / 2 - button3TextSize.X / 2), (int)(button3.Y + button3.Height / 2 - button3TextSize.Y / 2)), Color.White);
@@ -186,55 +186,15 @@ namespace rts
             foreach (Unit unit in Unit.Units)
             {
                 //if (unit.CurrentPathNode.Tile.Visible)
-                //if (unit.Visible)
+                if (unit.Visible || Game1.DEBUG)
                 {
-                    //if (!SelectingUnits.Contains(unit) && !SelectedUnits.Contains(unit))
-                    {
-                        spriteBatch.Draw(unit.Texture, new Rectangle((int)unit.CenterPoint.X, (int)unit.CenterPoint.Y, unit.Width, unit.Height), null, Color.White, unit.Rotation, unit.TextureCenterOrigin, SpriteEffects.None, 0f);
-                    }
-
-                    /*int teamIndicatorSize = (int)(unit.Diameter / 4);
-                    // Rectangle teamIndicator = new Rectangle((int)(unit.CenterPoint.X - teamIndicatorSize / 2), (int)(unit.CenterPoint.Y - teamIndicatorSize / 2), teamIndicatorSize, teamIndicatorSize);
-                    Rectangle teamIndicator = new Rectangle((int)unit.CenterPoint.X, (int)unit.CenterPoint.Y, teamIndicatorSize, teamIndicatorSize);
-
-                    if (unit.Team == myTeam)
-                        spriteBatch.Draw(ColorTexture.Green, teamIndicator, null, Color.White, unit.Rotation, ColorTexture.CenterVector, SpriteEffects.None, 0f);
-                    else
-                        spriteBatch.Draw(ColorTexture.Red, teamIndicator, null, Color.White, unit.Rotation, ColorTexture.CenterVector, SpriteEffects.None, 0f);*/
+                    spriteBatch.Draw(unit.Texture, new Rectangle((int)unit.CenterPoint.X, (int)unit.CenterPoint.Y, unit.Width, unit.Height), null, Color.White, unit.Rotation, unit.TextureCenterOrigin, SpriteEffects.None, 0f);
 
                     if (unit.Team == Player.Me.Team)
                         spriteBatch.Draw(greenTeamIndicatorTexture, new Rectangle((int)unit.CenterPoint.X, (int)unit.CenterPoint.Y, unit.Width, unit.Height), null, Color.White, unit.Rotation, new Vector2(greenTeamIndicatorTexture.Width / 2, greenTeamIndicatorTexture.Height / 2), SpriteEffects.None, 0f);
                     else
                         spriteBatch.Draw(redTeamIndicatorTexture, new Rectangle((int)unit.CenterPoint.X, (int)unit.CenterPoint.Y, unit.Width, unit.Height), null, Color.White, unit.Rotation, new Vector2(redTeamIndicatorTexture.Width / 2, redTeamIndicatorTexture.Height / 2), SpriteEffects.None, 0f);
-
-                    /*line.Colour = Color.Yellow;
-                    line.ClearVectors();
-                    float incrementRadians = MathHelper.TwoPi / 32f;
-                    for (float r = 0f; r <= MathHelper.TwoPi; r += incrementRadians)
-                    {
-                        line.AddVector(new Vector2(unit.CenterPointX + (unit.AttackRange + unit.Radius) * (float)Math.Cos(r), unit.CenterPointY + (unit.AttackRange + unit.Radius) * (float)Math.Sin(r)));
-                    }
-                    line.AddVector(new Vector2(unit.CenterPointX + unit.AttackRange + unit.Radius, unit.CenterPointY));
-                    line.Render(spriteBatch);*/
-
-                    /*line.Colour = Color.Black;
-                    lock (unit.PotentialCollisions)
-                    {
-                        foreach (Unit u in unit.PotentialCollisions)
-                        {
-                            line.ClearVectors();
-                            line.AddVector(unit.CenterPoint);
-                            line.AddVector(u.CenterPoint);
-                            line.Render(spriteBatch);
-                        }
-                    }*/
                 }
-                //else
-                //{
-                //spriteBatch.Draw(ColorTexture.Red, new Rectangle((int)(unit.CenterPoint.X - 1), (int)(unit.CenterPoint.Y - 1), 2, 2), Color.White);
-                //}
-                // red dot showing X and Y location of unit
-                //spriteBatch.Draw(ColorTexture.Red, new Rectangle((int)(unit.X - 1), (int)(unit.Y - 1), 2, 2), Color.White);
             }
         }
 
@@ -242,37 +202,29 @@ namespace rts
         {
             foreach (Structure structure in Structure.Structures)
             {
-                if (structure.Visible || !structure.Visible)
+                if (!structure.Revealed && !structure.Visible )
+                    continue;
+
+                Rectangle teamIndicator = new Rectangle();
+                teamIndicator.Width = (int)(structure.Rectangle.Width * .4f);
+                teamIndicator.Height = (int)(structure.Rectangle.Height * .4f);
+                teamIndicator.Location = new Point((int)(structure.CenterPointX - teamIndicator.Width / 2), (int)(structure.CenterPointY - teamIndicator.Height / 2));
+                Texture2D teamIndicatorColor = (structure.Team == Player.Me.Team ? ColorTexture.Green : ColorTexture.Red);
+
+                if (structure.Visible)
                 {
-                    // draw team color indicator
-                    Rectangle teamIndicator = new Rectangle();
-                    teamIndicator.Width = (int)(structure.Rectangle.Width * .4f);
-                    teamIndicator.Height = (int)(structure.Rectangle.Height * .4f);
-                    teamIndicator.Location = new Point((int)(structure.CenterPointX - teamIndicator.Width / 2), (int)(structure.CenterPointY - teamIndicator.Height / 2));
-                    if (structure.Team == Player.Me.Team)
-                        spriteBatch.Draw(ColorTexture.Green, teamIndicator, Color.White);
-                    else
-                        spriteBatch.Draw(ColorTexture.Red, teamIndicator, Color.White);
+                    // draw team indicator
+                    spriteBatch.Draw(teamIndicatorColor, teamIndicator, Color.White);
 
                     // draw structure
-                    //spriteBatch.Draw(structure.Texture, structure.Rectangle, Color.White);
                     spriteBatch.Draw(structure.Texture, new Rectangle((int)structure.CenterPoint.X, (int)structure.CenterPoint.Y, structure.Width, structure.Height), null, Color.White, -camera.Rotation, structure.TextureCenterOrigin, SpriteEffects.None, 0f);
                 }
                 else if (structure.Revealed)
                 {
-                    //spriteBatch.Draw(ColorTexture.Red, new Rectangle((int)(structure.CenterPoint.X - 1), (int)(structure.CenterPoint.Y - 1), 2, 2), Color.White);
-
-                    Rectangle teamIndicator = new Rectangle();
-                    teamIndicator.Width = (int)(structure.Rectangle.Width * .4f);
-                    teamIndicator.Height = (int)(structure.Rectangle.Height * .4f);
-                    teamIndicator.Location = new Point((int)(structure.CenterPointX - teamIndicator.Width / 2), (int)(structure.CenterPointY - teamIndicator.Height / 2));
-                    //if (structure.Team == myTeam)
-                    //spriteBatch.Draw(ColorTexture.Green, teamIndicator, Color.White * .5f);
-                    // else
-                    //    spriteBatch.Draw(ColorTexture.Red, teamIndicator, Color.White * .5f);
+                    // draw team indicator
+                    spriteBatch.Draw(teamIndicatorColor, teamIndicator, Color.White * .5f);
 
                     // draw structure
-                    //spriteBatch.Draw(structure.Texture, structure.Rectangle, Color.White * .9f);
                     spriteBatch.Draw(structure.Texture, new Rectangle((int)structure.CenterPoint.X, (int)structure.CenterPoint.Y, structure.Width, structure.Height), null, Color.White * .9f, -camera.Rotation, structure.TextureCenterOrigin, SpriteEffects.None, 0f);
                 }
             }
@@ -360,7 +312,7 @@ namespace rts
                 if (SelectedUnits.Count == 1)
                 {
                     Unit unit = SelectedUnits[0] as Unit;
-                    if (unit != null && unit.Commands.Count > 0)
+                    if (unit != null && unit.Team == Player.Me.Team && unit.Commands.Count > 0)
                     {
                         line.ClearVectors();
                         line.AddVector(unit.CenterPoint);
@@ -684,9 +636,9 @@ namespace rts
             Rectangle roksIconRectangle = new Rectangle(roksStringX - iconSize - 5, spacingY, iconSize, iconSize);
             spriteBatch.Draw(ResourceType.Roks.CargoTexture, roksIconRectangle, Color.White);
 
-            string roksPerSecondString = "+ " + roksPerSecond;
-            Vector2 roksPerSecondStringSize = resourceCountFont.MeasureString(roksPerSecondString);
-            spriteBatch.DrawString(resourceCountFont, roksPerSecondString, new Vector2((int)(roksStringX + roksStringSize.X / 2 - roksPerSecondStringSize.Y / 2), (int)(spacingY + roksPerSecondStringSize.Y)), Color.White);
+            //string roksPerSecondString = "+ " + roksPerSecond;
+            //Vector2 roksPerSecondStringSize = resourceCountFont.MeasureString(roksPerSecondString);
+            //spriteBatch.DrawString(resourceCountFont, roksPerSecondString, new Vector2((int)(roksStringX + roksStringSize.X / 2 - roksPerSecondStringSize.Y / 2), (int)(spacingY + roksPerSecondStringSize.Y)), Color.White);
         }
 
         void drawRallyPoints(SpriteBatch spriteBatch)
@@ -1319,7 +1271,7 @@ namespace rts
 
                     // move speed
                     int moveSpeedPosY = (int)(armorPosY + armorSize.Y + statsSpacing);
-                    Vector2 moveSpeedSize = unitInfoHpFont.MeasureString(unit.Speed.ToString());
+                    Vector2 moveSpeedSize = unitInfoHpFont.MeasureString(unitType.MoveSpeed.ToString());
                     spriteBatch.DrawString(unitInfoHpFont, unitType.MoveSpeed.ToString(), new Vector2(statsPosX, moveSpeedPosY), Color.LightBlue);
                     spriteBatch.DrawString(unitInfoHpFont, " move speed.", new Vector2((int)(statsPosX + moveSpeedSize.X), moveSpeedPosY), Color.White);
                 }

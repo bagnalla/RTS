@@ -14,6 +14,7 @@ namespace rts
 
     public class Unit : RtsObject
     {
+        public static Unit Dummy = new Unit();
         public static List<Unit> units = new List<Unit>();
         public static List<Unit> unitsSorted = new List<Unit>();
         public static List<Unit> DeadUnits = new List<Unit>();
@@ -42,6 +43,8 @@ namespace rts
         //bool isIdle = true, isMoving, isFollowing, isAttacking, isAttackMoving;
         bool isWithinRangeOfTarget, avoidingUnits;
 
+        // constructor for dummy
+        Unit() : base(Vector2.Zero, 0, 0) {}
         public Unit(UnitType type, Vector2 position, short team, short id)
             : base(position, type.Size, team)
         {

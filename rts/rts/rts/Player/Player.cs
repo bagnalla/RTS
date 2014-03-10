@@ -31,7 +31,7 @@ namespace rts
         public Structure[] StructureArray = new Structure[2048];
         public List<UnitCommand> UnitCommands = new List<UnitCommand>();
 
-        public short UnitIDCounter;
+        //public short UnitIDCounter;
         public short CommandIDCounter;
         public short StructureIDCounter;
 
@@ -75,6 +75,22 @@ namespace rts
                     count++;
             }
             return count;
+        }
+
+        // returns the index to the first free space in the unit array
+        // and places dummy unit in that space
+        // returns -1 if no free space
+        public short NextFreeUnitID()
+        {
+            for (int i = 0; i < UnitArray.Length; i++)
+            {
+                if (UnitArray[i] == null)
+                {
+                    UnitArray[i] = Unit.Dummy;
+                    return (short)i;
+                }
+            }
+            return -1;
         }
     }
 }

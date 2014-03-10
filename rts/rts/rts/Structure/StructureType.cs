@@ -41,7 +41,7 @@ namespace rts
             TownHall.Hp = 1000;
             TownHall.Armor = 2;
             TownHall.SightRange = 10;
-            TownHall.BuildTime = 2500;// 25000;
+            TownHall.BuildTime = 25000;
             TownHall.SelectionSortValue = 0;
             TownHall.TargetPriority = 0;
             TownHall.Rallyable = true;
