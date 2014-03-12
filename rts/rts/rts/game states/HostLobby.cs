@@ -42,6 +42,12 @@ namespace rts
 
             server = new NetServer(config);
             server.Start();
+
+            if (Game1.DEBUG)
+            {
+                server.Configuration.SimulatedMinimumLatency = .08f;
+                server.Configuration.SimulatedRandomLatency = .01f;
+            }
         }
 
         public override void Update(GameTime gameTime)

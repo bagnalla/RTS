@@ -30,6 +30,7 @@ namespace rts
         public int KillCount;
         public bool Busy { get; protected set; }
         public bool IgnoringCollision { get; protected set; }
+        //public bool IgnoringCollision { get { return false; } set { ignoringCollision = false; } }
         public float MaxSpeed { get; private set; }
         public float Speed { get; protected set; }
         protected float acceleration;
