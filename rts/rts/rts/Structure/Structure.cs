@@ -65,7 +65,7 @@ namespace rts
             foreach (Structure structure in Structures)
                 structure.setExitPathNodes();
 
-            foreach (Roks roks in Roks.AllRoks)
+            foreach (MineResource roks in MineResource.AllMineResources)
                 roks.SetExitPathNodes();
 
             AddStructure(this);
@@ -361,7 +361,7 @@ namespace rts
 
         public void RemoveFromBuildQueue(int index)
         {
-            if (BuildQueue.Count <= index)
+            if (BuildQueue.Count <= index || index < 0)
                 return;
 
             BuildUnitButtonType unitButtonType = BuildQueue[0].Type as BuildUnitButtonType;
@@ -394,20 +394,17 @@ namespace rts
 
             // if it was a unit, set its ID to null in the player unit array
             if (BuildQueue[index].Type is BuildUnitButtonType)
-                Player.Players[Team].UnitArray[BuildQueue[index].ID] = null;
+            {
+                Player.Players[Team].AddUnitIDToSetNull(BuildQueue[index].ID, Rts.GameClock);
+                if (Team == Player.Me.Team)
+                    ((Rts)Game1.Game.CurrentGameState).TransmitUnitCancelConfirmation(BuildQueue[BuildQueue.Count - 1].ID);
+            }
 
             BuildQueue.RemoveAt(index);
         }
 
         public void RemoveLastItemInBuildQueue()
         {
-            if (BuildQueue.Count == 0)
-                return;
-
-            // if it was a unit, set its ID to null in the player unit array
-            if (BuildQueue[BuildQueue.Count - 1].Type is BuildUnitButtonType)
-                Player.Players[Team].UnitArray[BuildQueue[BuildQueue.Count - 1].ID] = null;
-
             RemoveFromBuildQueue(BuildQueue.Count - 1);
         }
 

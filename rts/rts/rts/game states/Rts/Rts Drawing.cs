@@ -42,25 +42,27 @@ namespace rts
         {
             if (Game1.DEBUG)
             {
-                Game1.Game.DebugMonitor.AddLine("camera position: " + camera.Pos);
-                Game1.Game.DebugMonitor.AddLine("camera zoom: " + camera.Zoom);
-                Game1.Game.DebugMonitor.AddLine("camera rotation: " + camera.Rotation);
-                Game1.Game.DebugMonitor.AddLine("pathfinding usage: " + pathFindingPercentage.ToString("F1") + "%");
-                Game1.Game.DebugMonitor.AddLine("pathfinding queue: " + pathFindQueueSize);
+                //Game1.Game.DebugMonitor.AddLine("camera position: " + camera.Pos);
+                //Game1.Game.DebugMonitor.AddLine("camera zoom: " + camera.Zoom);
+                //Game1.Game.DebugMonitor.AddLine("camera rotation: " + camera.Rotation);
+                //Game1.Game.DebugMonitor.AddLine("pathfinding usage: " + pathFindingPercentage.ToString("F1") + "%");
+                //Game1.Game.DebugMonitor.AddLine("pathfinding queue: " + pathFindQueueSize);
                 //Game1.Game.DebugMonitor.AddLine("time: " + GameTimer.Elapsed.Minutes + ":" + GameTimer.Elapsed.Seconds.ToString("D2"));
-                Game1.Game.DebugMonitor.AddLine("roks: " + Player.Players[1].Roks);
+                //Game1.Game.DebugMonitor.AddLine("roks: " + Player.Players[1].Roks);
 
                 if (SelectedUnits.Count == 1)
                 {
                     Unit unit = SelectedUnits[0] as Unit;
                     if (unit != null)
                     {
-                        if (unit.Commands.Count == 0)
-                            Game1.Game.DebugMonitor.AddLine("idle");
-                        else
-                            Game1.Game.DebugMonitor.AddLine(unit.Commands[0].ToString());
+                        //if (unit.Commands.Count == 0)
+                        //    Game1.Game.DebugMonitor.AddLine("idle");
+                        //else
+                        //    Game1.Game.DebugMonitor.AddLine(unit.Commands[0].ToString());
 
-                        Game1.Game.DebugMonitor.AddLine("ignoring collision: " + unit.IgnoringCollision);
+                        //Game1.Game.DebugMonitor.AddLine("ignoring collision: " + unit.IgnoringCollision);
+
+                        Game1.Game.DebugMonitor.AddLine("ID: " + unit.ID);
                     }
                 }
             }
@@ -241,11 +243,17 @@ namespace rts
                 //spriteBatch.Draw(resource.Texture, resource.Rectangle, Color.White);
                 spriteBatch.Draw(resource.Texture, new Rectangle((int)resource.CenterPoint.X, (int)resource.CenterPoint.Y, resource.Width, resource.Height), null, Color.White, -camera.Rotation, resource.TextureCenterOrigin, SpriteEffects.None, 0f);
 
-                if (resource.Visible)
+                if (Game1.DEBUG)
                 {
                     string s = resource.Amount.ToString();
                     Vector2 stringSize = unitInfoUnitNameFont.MeasureString(s);
-                    //spriteBatch.DrawString(unitInfoUnitNameFont, s, new Vector2(resource.Rectangle.X + resource.Rectangle.Width / 2 - stringSize.X / 2, resource.Rectangle.Y + resource.Rectangle.Height / 2 - stringSize.Y / 2), Color.Black, -camera.Rotation, new Vector2(stringSize.X / 4, stringSize.Y / 4), 1f, SpriteEffects.None, 0f);
+
+                    spriteBatch.DrawString(unitInfoUnitNameFont, s, resource.CenterPoint, Color.Black, -camera.Rotation, new Vector2(stringSize.X / 2, stringSize.Y / 2), 1f, SpriteEffects.None, 0f);
+                }
+                else if (resource.Visible)
+                {
+                    string s = resource.Amount.ToString();
+                    Vector2 stringSize = unitInfoUnitNameFont.MeasureString(s);
 
                     spriteBatch.DrawString(unitInfoUnitNameFont, s, resource.CenterPoint, Color.Black, -camera.Rotation, new Vector2(stringSize.X / 2, stringSize.Y / 2), 1f, SpriteEffects.None, 0f);
                 }
@@ -634,7 +642,7 @@ namespace rts
             spriteBatch.DrawString(resourceCountFont, roksString, new Vector2(roksStringX, spacingY), Color.White);
 
             Rectangle roksIconRectangle = new Rectangle(roksStringX - iconSize - 5, spacingY, iconSize, iconSize);
-            spriteBatch.Draw(ResourceType.Roks.CargoTexture, roksIconRectangle, Color.White);
+            spriteBatch.Draw(ResourceType.MineResource.CargoTexture, roksIconRectangle, Color.White);
 
             //string roksPerSecondString = "+ " + roksPerSecond;
             //Vector2 roksPerSecondStringSize = resourceCountFont.MeasureString(roksPerSecondString);

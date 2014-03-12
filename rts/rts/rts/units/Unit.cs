@@ -14,7 +14,7 @@ namespace rts
 
     public class Unit : RtsObject
     {
-        public static Unit Dummy = new Unit();
+        public static Unit Reserved = new Unit();
         public static List<Unit> units = new List<Unit>();
         public static List<Unit> unitsSorted = new List<Unit>();
         public static List<Unit> DeadUnits = new List<Unit>();
@@ -45,6 +45,7 @@ namespace rts
 
         // constructor for dummy
         Unit() : base(Vector2.Zero, 0, 0) {}
+
         public Unit(UnitType type, Vector2 position, short team, short id)
             : base(position, type.Size, team)
         {
@@ -1662,14 +1663,30 @@ namespace rts
 
             clearCommands();
 
-            //Player.Players[Team].UnitArray[ID] = null;
-            Player.Players[Team].UnitIDsToSetNull.Add(new KeyValuePair<short, float>(ID, Rts.GameClock));
+            Player.Players[Team].AddUnitIDToSetNull(ID, Rts.GameClock);
 
             NetOutgoingMessage msg = Rts.netPeer.CreateMessage();
             msg.Write(MessageID.UNIT_DEATH);
             msg.Write(ID);
             msg.Write(Team);
             Rts.netPeer.SendMessage(msg, Rts.connection, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        // for removing a unit that isnt supposed to exist
+        public void RemoveWithoutAnimationOrMessage()
+        {
+            RemoveUnit(this);
+
+            Player.Players[Team].CurrentSupply -= type.SupplyCost;
+
+            CurrentPathNode.UnitsContained.Remove(this);
+            foreach (PathNode pathNode in OccupiedPathNodes)
+                pathNode.UnitsContained.Remove(this);
+
+            clearCommands();
+
+            // set to null immediately
+            Player.Players[Team].UnitArray[ID] = null;
         }
 
         public bool Intersects(Unit u)

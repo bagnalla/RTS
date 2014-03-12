@@ -15,8 +15,8 @@ namespace rts
 {
     public partial class Rts : GameState
     {
-        public static float GameSpeed = 2f;//2.5f;
-        public static float MusicVolume = .2f;
+        public static float GameSpeed = 1f;//2.5f;
+        public static float MusicVolume = .1f;//.2f;
         public const float COUNTDOWN_TIME = 10f;
 
         public static GameTime gameTime;
@@ -546,12 +546,13 @@ namespace rts
                 {
                     MapTile tile = map.Tiles[y, x];
 
-                    if (tile.Type == 0)
+                    /*if (tile.Type == 0)
                         spriteBatch.Draw(ColorTexture.Gray, tile.Rectangle, Color.White);
                     else if (tile.Type == 1)
                         spriteBatch.Draw(boulder1Texture, tile.Rectangle, Color.White);
                     else if (tile.Type == 2)
-                        spriteBatch.Draw(tree1Texture, tile.Rectangle, Color.White);
+                        spriteBatch.Draw(tree1Texture, tile.Rectangle, Color.White);*/
+                    spriteBatch.Draw(tile.Texture, tile.Rectangle, Color.White);
                 }
             }
             spriteBatch.End();
@@ -681,7 +682,7 @@ namespace rts
         {
             foreach (Player player in Player.Players)
             {
-                for (int i = 0; i < player.ScheduledActions.Count; i++)
+                for (int i = 0; i < player.ScheduledActions.Count; )
                 {
                     ScheduledAction action = player.ScheduledActions[i];
 
@@ -742,7 +743,12 @@ namespace rts
                                 if (scheduledStructureCommand.Structure.UnderConstruction)
                                     scheduledStructureCommand.Structure.Cancel();
                                 else
-                                    scheduledStructureCommand.Structure.RemoveLastItemInBuildQueue();
+                                {
+                                    if (scheduledStructureCommand.Index >= 0)
+                                        scheduledStructureCommand.Structure.RemoveFromBuildQueue(scheduledStructureCommand.Index);
+                                    else
+                                        scheduledStructureCommand.Structure.RemoveLastItemInBuildQueue();
+                                }
                             }
                             else
                                 scheduledStructureCommand.Structure.AddToBuildQueue((ProductionButtonType)scheduledStructureCommand.CommandType, scheduledStructureCommand.ID);

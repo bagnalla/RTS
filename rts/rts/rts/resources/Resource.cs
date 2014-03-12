@@ -9,17 +9,17 @@ namespace rts
     public class ResourceType
     {
         public static readonly ResourceType
-            Roks;
+            MineResource;
 
         static ResourceType()
         {
-            Roks = new ResourceType();
-            Roks.Name = "Roks";
-            Roks.NormalTexture = Game1.Game.Content.Load<Texture2D>("WC2Gold");
-            Roks.DepletedTexture = Game1.Game.Content.Load<Texture2D>("WC2Gold");
-            Roks.CargoTexture = Game1.Game.Content.Load<Texture2D>("rock");
-            Roks.AmountOfResources = 2500;
-            Roks.Size = 3;
+            MineResource = new ResourceType();
+            MineResource.Name = "MineResource";
+            MineResource.NormalTexture = Game1.Game.Content.Load<Texture2D>("WC2Gold");
+            MineResource.DepletedTexture = Game1.Game.Content.Load<Texture2D>("WC2Gold");
+            MineResource.CargoTexture = Game1.Game.Content.Load<Texture2D>("rock");
+            MineResource.AmountOfResources = 100;// 2500;
+            MineResource.Size = 3;
         }
 
         public Texture2D NormalTexture, DepletedTexture, CargoTexture;
@@ -78,7 +78,7 @@ namespace rts
         protected float timeSinceStatusUpdate, statusUpdateDelay = 1f;
         public void checkForStatusUpdate(NetPeer netPeer, NetConnection connection, int team)
         {
-            if (AmountChanged && ((team == Player.Me.Team && timeSinceStatusUpdate >= statusUpdateDelay) || Depleted))
+            if (/*AmountChanged && */((team == Player.Me.Team && timeSinceStatusUpdate >= statusUpdateDelay) || Depleted))
             {
                 timeSinceStatusUpdate = 0f;
                 AmountChanged = false;
@@ -146,9 +146,9 @@ namespace rts
         {
             Resources.Remove(r);
 
-            Roks roks = r as Roks;
+            MineResource roks = r as MineResource;
             if (roks != null)
-                Roks.AllRoks.Remove(roks);
+                MineResource.AllMineResources.Remove(roks);
         }
 
         public int Amount
@@ -175,34 +175,34 @@ namespace rts
         }
     }
 
-    public class Roks : Resource
+    public class MineResource : Resource
     {
-        public static List<Roks> AllRoks { get; private set; }
+        public static List<MineResource> AllMineResources { get; private set; }
         public List<PathNode> exitPathNodes = new List<PathNode>();
-        static int allowEntranceDelay = 250, harvestDelay = 2000;
+        const int ALLOW_ENTRANCE_DELAY = 250, HARVEST_DELAY = 2000;
 
         public const int CARGO_PER_TRIP = 1;
 
-        static Roks()
+        static MineResource()
         {
-            AllRoks = new List<Roks>();
+            AllMineResources = new List<MineResource>();
         }
 
         List<WorkerNublet> workersInside = new List<WorkerNublet>();
         List<int> workerTimes = new List<int>();
 
-        public Roks(Point location)
-            : base(ResourceType.Roks, location, ResourceType.Roks.Size)
+        public MineResource(Point location)
+            : base(ResourceType.MineResource, location, ResourceType.MineResource.Size)
         {
             SetExitPathNodes();
 
-            foreach (Roks roks in Roks.AllRoks)
+            foreach (MineResource roks in MineResource.AllMineResources)
                 roks.SetExitPathNodes();
 
-            AllRoks.Add(this);
+            AllMineResources.Add(this);
         }
 
-        int timeSinceLastEntrance = allowEntranceDelay;
+        int timeSinceLastEntrance = ALLOW_ENTRANCE_DELAY;
         protected override void Update(GameTime gameTime)
         {
             timeSinceLastEntrance += (int)(gameTime.ElapsedGameTime.TotalMilliseconds * Rts.GameSpeed);
@@ -212,7 +212,7 @@ namespace rts
             {
                 workerTimes[i] += (int)(gameTime.ElapsedGameTime.TotalMilliseconds * Rts.GameSpeed);
 
-                if (workerTimes[i] >= harvestDelay)
+                if (workerTimes[i] >= HARVEST_DELAY) 
                 {
                     releaseWorker(workersInside[i]);
                     workerTimes.Remove(workerTimes[i]);
@@ -274,7 +274,7 @@ namespace rts
             if (Amount - (workersInside.Count * CARGO_PER_TRIP) <= 0)
                 return false;
 
-            if (timeSinceLastEntrance >= allowEntranceDelay)
+            if (timeSinceLastEntrance >= ALLOW_ENTRANCE_DELAY)
             {
                 timeSinceLastEntrance = 0;
 
@@ -304,8 +304,8 @@ namespace rts
 
             // only decrement amount if worker is on my team,
             // else rely on status updates for amount
-            if (worker.Team != Player.Me.Team)
-                Amount = oldAmount;
+            //if (worker.Team != Player.Me.Team)
+                //Amount = oldAmount;
 
             //int newAmount = (int)(MathHelper.Max(Amount - CARGO_PER_TRIP, 0));
             //worker.CargoAmount = Amount - newAmount;
@@ -363,10 +363,11 @@ namespace rts
         {
  	        base.deplete();
 
-            //foreach (WorkerNublet worker in workersInside)
-            //{
-            //
-            //}
+            // release all workers.
+            // only necessary for when the other client
+            // depletes a resource
+            //for (int i = 0; i < workersInside.Count; )
+            //    releaseWorker(workersInside[i]);
         }
 
         TownHall findNearestTownHall(Unit unit)

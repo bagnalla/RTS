@@ -6,7 +6,7 @@ namespace rts
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        public const bool DEBUG = true;
+        public const bool DEBUG = false;
         
         public static Game1 Game { get; private set; }
         public GameState CurrentGameState { get; private set; }
@@ -57,7 +57,7 @@ namespace rts
 
             DebugMonitor = new DebugMonitor(Game);
             Components.Add(DebugMonitor);
-            //DebugMonitor.Enabled = true;
+            DebugMonitor.Enabled = true;
             DebugMonitor.DrawBox = true;
             DebugMonitor.Position = Direction.SouthEast;
 

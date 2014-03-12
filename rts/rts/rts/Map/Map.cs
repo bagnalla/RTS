@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace rts
 {
@@ -21,6 +22,7 @@ namespace rts
         {
             loadMap(mapFilepath);
             calculateTileNeighbors();
+            loadMapTextures();
         }
 
         void loadMap(string mapFilePath)
@@ -47,7 +49,7 @@ namespace rts
                 {
                     int typeCode = int.Parse(rowOfTiles[s].Substring(0, 1));
                     int pathingCode = int.Parse(rowOfTiles[s].Substring(1, 1));
-                    Tiles[i - 1, s] = new MapTile(s, (i - 1), tileSize, tileSize, typeCode, pathingCode);
+                    Tiles[i - 1, s] = new MapTile(this, s, (i - 1), tileSize, tileSize, typeCode, pathingCode);
                     //if (pathingCode == 1)
                     //    Walls.Add(Tiles[i - 1, s]);
                 }
@@ -95,12 +97,40 @@ namespace rts
             }
         }
 
+        List<Texture2D[]> textureSets = new List<Texture2D[]>();
+        List<Texture2D[]> horizontalTextureSets = new List<Texture2D[]>();
+        List<Texture2D[]> verticalTextureSets = new List<Texture2D[]>();
+
+        void loadMapTextures()
+        {
+            // gray texture
+            textureSets.Add(Util.SplitTexture(ColorTexture.Gray, ColorTexture.Gray.Width / 3, ColorTexture.Gray.Height / 3));
+            horizontalTextureSets.Add(Util.SplitTexture(ColorTexture.Gray, ColorTexture.Gray.Width / 2, 101));
+            verticalTextureSets.Add(Util.SplitTexture(ColorTexture.Gray, 101, ColorTexture.Gray.Width / 2));
+
+            // texture set 1
+            Texture2D textureSet1 = Game1.Game.Content.Load<Texture2D>("tile texture sets/tile1/tiletest1");
+            Texture2D textureSet1Horizontal = Game1.Game.Content.Load<Texture2D>("tile texture sets/tile1/tiletest1horizontal");
+            Texture2D textureSet1Vertical = Game1.Game.Content.Load<Texture2D>("tile texture sets/tile1/tiletest1vertical");
+            textureSets.Add(Util.SplitTexture(textureSet1, 101, 101));
+            horizontalTextureSets.Add(Util.SplitTexture(textureSet1Horizontal, 101, 101));
+            verticalTextureSets.Add(Util.SplitTexture(textureSet1Vertical, 101, 101));
+
+            foreach (MapTile tile in Tiles)
+            {
+                tile.TextureSet = textureSets[tile.Type];
+                tile.HorizontalTextureSet = horizontalTextureSets[tile.Type];
+                tile.VerticalTextureSet = verticalTextureSets[tile.Type];
+                tile.RefreshTexture();
+            }
+        }
+
         public void InstantiateMapResources()
         {
             foreach (KeyValuePair<Point, int> resource in resources)
             {
                 if (resource.Value == 0)
-                    new Roks(resource.Key);
+                    new MineResource(resource.Key);
             }
         }
 

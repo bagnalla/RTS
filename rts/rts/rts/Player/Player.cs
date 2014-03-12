@@ -44,22 +44,41 @@ namespace rts
             Team = team;
         }
 
+        public void AddUnitIDToSetNull(short unitID, float currentClockTime)
+        {
+            UnitIDsToSetNull.Add(new KeyValuePair<short, float>(unitID, currentClockTime));
+        }
+
         // set IDs to null references if theyve reached delay time
-        const float NULL_ID_DELAY = 10f;
+        const float NULL_ID_DELAY = 5f;
         public static void SetNullIDS()
         {
             foreach (Player player in Players)
             {
-                foreach (KeyValuePair<short, float> pair in player.UnitIDsToSetNull)
+                for (int i = 0; i < player.UnitIDsToSetNull.Count;)
                 {
-                    if (pair.Value + NULL_ID_DELAY >= Rts.GameClock)
+                    var pair = player.UnitIDsToSetNull[i];
+
+                    if (Rts.GameClock >= pair.Value + NULL_ID_DELAY)
+                    {
                         player.UnitArray[pair.Key] = null;
+                        player.UnitIDsToSetNull.Remove(pair);
+                    }
+                    else
+                        i++;
                 }
 
-                foreach (KeyValuePair<short, float> pair in player.StructureIDsToSetNull)
+                for (int i = 0; i < player.StructureIDsToSetNull.Count; )
                 {
-                    if (pair.Value + NULL_ID_DELAY >= Rts.GameClock)
+                    var pair = player.StructureIDsToSetNull[i];
+
+                    if (Rts.GameClock >= pair.Value + NULL_ID_DELAY)
+                    {
                         player.StructureArray[pair.Key] = null;
+                        player.StructureIDsToSetNull.Remove(pair);
+                    }
+                    else
+                        i++;
                 }
             }
         }
@@ -86,7 +105,7 @@ namespace rts
             {
                 if (UnitArray[i] == null)
                 {
-                    UnitArray[i] = Unit.Dummy;
+                    UnitArray[i] = Unit.Reserved;
                     return (short)i;
                 }
             }

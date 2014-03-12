@@ -81,7 +81,7 @@ namespace rts
             if (structureToUse != null)
             {
                 Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureToUse, CommandButtonType.Cancel));
-                transmitStructureCommand(structureToUse, CommandButtonType.Cancel);
+                TransmitStructureCommand(structureToUse, CommandButtonType.Cancel);
             }
         }
 
@@ -704,13 +704,14 @@ namespace rts
             {
                 if (structureToUse.CanAddToBuildQueue(buttonType))
                 {
-                    //short unitID = Player.Me.UnitIDCounter++;
                     short unitID = Player.Me.NextFreeUnitID();
+                    if (unitID == -1)
+                        return;
 
                     Player.Me.ScheduledActions.Add(new ScheduledStructureCommand(currentScheduleTime, structureToUse, buttonType, unitID));
                     Player.Me.Roks -= buttonType.UnitType.RoksCost;
 
-                    transmitStructureCommand(structureToUse, buttonType, unitID);
+                    TransmitStructureCommand(structureToUse, buttonType, unitID);
                 }
             }
         }

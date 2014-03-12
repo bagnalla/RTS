@@ -382,6 +382,10 @@ namespace rts
                         {
                             //s.BuildQueue.RemoveAt(i);
                             s.RemoveFromBuildQueue(i);
+                            ScheduledStructureCommand cancelCommand = new ScheduledStructureCommand(currentScheduleTime, s, CommandButtonType.Cancel);
+                            cancelCommand.Index = (short)i;
+                            Player.Me.ScheduledActions.Add(cancelCommand);
+                            TransmitStructureCommand(s, cancelCommand.CommandType, short.MinValue, (short)i);
                         }
                     }
                 }

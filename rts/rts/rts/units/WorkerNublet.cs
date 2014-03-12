@@ -263,7 +263,7 @@ namespace rts
 
         bool harvest(Resource resource)
         {
-            Roks roks = resource as Roks;
+            MineResource roks = resource as MineResource;
             if (roks != null)
             {
                 if (roks.CheckForEntrance(this))
@@ -375,7 +375,7 @@ namespace rts
 
         void returnCargo(ReturnCargoCommand command)
         {
-            if (CargoType == ResourceType.Roks)
+            if (CargoType == ResourceType.MineResource)
             {
                 Player.Players[Team].Roks += CargoAmount;
                 Player.Players[Team].Stats.RoksCounter += CargoAmount;

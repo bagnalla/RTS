@@ -99,8 +99,8 @@ namespace rts
 
         public static Texture2D[] SplitTexture(Texture2D original, int partWidth, int partHeight)
         {
-            int yCount = original.Height / partHeight + (partHeight % original.Height == 0 ? 0 : 1);//The number of textures in each horizontal row
-            int xCount = original.Height / partHeight + (partHeight % original.Height == 0 ? 0 : 1);//The number of textures in each vertical column
+            int yCount = original.Height / partHeight + (original.Height % partHeight == 0 ? 0 : 1);//The number of textures in each vertical row
+            int xCount = original.Width / partWidth + (original.Width % partWidth == 0 ? 0 : 1);//The number of textures in each horizontal column
             Texture2D[] r = new Texture2D[xCount * yCount];//Number of parts = (area of original) / (area of each part).
             int dataPerPart = partWidth * partHeight;//Number of pixels in each of the split parts
 

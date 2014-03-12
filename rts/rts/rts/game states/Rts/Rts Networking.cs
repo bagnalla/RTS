@@ -28,7 +28,7 @@ namespace rts
             UNIT_HP_UPDATE = 116,
             STRUCTURE_STATUS_UPDATE = 117,
             RESOURCE_STATUS_UPDATE = 118,
-            UNIT_COMMAND_FINISHED = 119
+            UNIT_CANCEL_CONFIRMATION = 119
             ;
     }
 
@@ -71,11 +71,7 @@ namespace rts
                 if (timeSinceLastSync >= syncDelay)
                 {
                     timeSinceLastSync = 0f;
-                    NetOutgoingMessage msg = netPeer.CreateMessage();
-                    msg.Write(MessageID.SYNC);
-                    msg.Write(GameClock);
-                    msg.Write(connection.AverageRoundtripTime);
-                    netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableSequenced, 0);
+                    TransmitSync();
                 }
             }
         }
@@ -91,6 +87,7 @@ namespace rts
                 NetOutgoingMessage msg = netPeer.CreateMessage();
                 msg.Write(MessageID.SYNC);
                 msg.Write(GameClock);
+                msg.Write((short)connection.AverageRoundtripTime);
                 netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableSequenced, 0);
             }
         }
@@ -144,73 +141,41 @@ namespace rts
                     byte id = msg.ReadByte();
 
                     if (id == MessageID.SYNC)
-                    {
                         processSync(msg);
-                    }
                     else if (id == MessageID.UNIT_MOVE_COMMAND_BATCH)
-                    {
                         processUnitMoveCommandBatch(msg);
-                    }
                     else if (id == MessageID.STRUCTURE_COMMAND)
-                    {
                         processStructureCommand(msg);
-                    }
                     else if (id == MessageID.RALLY_POINT_COMMAND)
-                    {
                         processRallyPointCommand(msg);
-                    }
                     else if (id == MessageID.UNIT_STATUS_UPDATE)
-                    {
                         processUnitStatusUpdate(msg);
-                    }
                     else if (id == MessageID.UNIT_HP_UPDATE)
-                    {
                         processUnitHpUpdate(msg);
-                    }
                     else if (id == MessageID.STRUCTURE_STATUS_UPDATE)
-                    {
                         processStructureStatusUpdate(msg);
-                    }
                     else if (id == MessageID.RESOURCE_STATUS_UPDATE)
-                    {
                         processResourceStatusUpdate(msg);
-                    }
                     else if (id == MessageID.UNIT_ATTACK_COMMAND_BATCH)
-                    {
                         processUnitAttackCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_ATTACK_MOVE_COMMAND_BATCH)
-                    {
                         processUnitAttackMoveCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_BUILD_COMMAND)
-                    {
                         processUnitBuildCommand(msg);
-                    }
                     else if (id == MessageID.UNIT_HARVEST_COMMAND_BATCH)
-                    {
                         processUnitHarvestCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_RETURN_CARGO_COMMAND_BATCH)
-                    {
                         processUnitReturnCargoCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_STOP_COMMAND_BATCH)
-                    {
                         processUnitStopCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_HOLD_POSITION_COMMAND_BATCH)
-                    {
                         processUnitHoldPositionCommandBatch(msg);
-                    }
                     else if (id == MessageID.UNIT_DEATH)
-                    {
                         processUnitDeath(msg);
-                    }
                     else if (id == MessageID.STRUCTURE_DEATH)
-                    {
                         processStructureDeath(msg);
-                    }
+                    else if (id == MessageID.UNIT_CANCEL_CONFIRMATION)
+                        processUnitCancelConfirmation(msg);
                     /*else if (id == MessageID.PATH_UPDATE)
                     {
                         processPathUpdate(msg);
@@ -224,7 +189,7 @@ namespace rts
         void processSync(NetIncomingMessage msg)
         {
             GameClock = msg.ReadFloat() + connection.AverageRoundtripTime / 2f;
-            OtherClientPing = msg.ReadFloat();
+            OtherClientPing = msg.ReadInt16();
             CurrentPing = MathHelper.Max(CurrentPing, OtherClientPing);
         }
 
@@ -260,6 +225,7 @@ namespace rts
             short structureID = msg.ReadInt16();
             short commandTypeID = msg.ReadInt16();
             short unitID = msg.ReadInt16();
+            short index = msg.ReadInt16();
 
             Structure structure = Player.Players[team].StructureArray[structureID];
             CommandButtonType commandType = CommandButtonType.CommandButtonTypes[commandTypeID];
@@ -269,7 +235,17 @@ namespace rts
                 int wut = 0;
             }
 
-            Player.Players[team].ScheduledActions.Add(new ScheduledStructureCommand(scheduledTime, structure, commandType, unitID));
+            if (index >= 0)
+            {
+                ScheduledStructureCommand command = new ScheduledStructureCommand(scheduledTime, structure, commandType);
+                command.Index = index;
+                Player.Players[team].ScheduledActions.Add(command);
+            }
+            else
+                Player.Players[team].ScheduledActions.Add(new ScheduledStructureCommand(scheduledTime, structure, commandType, unitID));
+            
+            if (unitID >= 0)
+                Player.Players[team].UnitArray[unitID] = Unit.Reserved;
         }
 
         void processRallyPointCommand(NetIncomingMessage msg)
@@ -281,14 +257,17 @@ namespace rts
 
             for (int i = 0; i < numberOfCommands; i++)
             {
-                Structure structure = Player.Players[team].StructureArray[msg.ReadInt16()];
-                Resource resource;
+                int structureID = msg.ReadInt16();
                 short resourceID = msg.ReadInt16();
                 Vector2 point = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                if (resourceID == (short)-1)
-                    resource = null;
-                else
-                    resource = Resource.ResourceArray[resourceID];
+
+                Structure structure = Player.Players[team].StructureArray[structureID];
+                if (structure == null)
+                {
+                    int wut = 0;
+                }
+                Resource resource = (resourceID < 0 ? null : Resource.ResourceArray[resourceID]);
+
                 Player.Players[team].ScheduledActions.Add(new ScheduledStructureTargetedCommand(scheduledTime, structure, CommandButtonType.RallyPoint, resource, point, queued));
             }
         }
@@ -394,14 +373,14 @@ namespace rts
 
         void processResourceStatusUpdate(NetIncomingMessage msg)
         {
-            short resourceID = msg.ReadInt16();
+            /*short resourceID = msg.ReadInt16();
             short amount = msg.ReadInt16();
 
             Resource resource = Resource.ResourceArray[resourceID];
             if (resource != null)// && amount > resource.Amount)
             {
                 resource.Amount = amount;
-            }
+            }*/
         }
 
         void processUnitAttackCommandBatch(NetIncomingMessage msg)
@@ -488,8 +467,11 @@ namespace rts
 
             for (int i = 0; i < count; i++)
             {
-                Unit unit = Player.Players[team].UnitArray[msg.ReadInt16()];
-                Resource targetResource = Resource.ResourceArray[msg.ReadInt16()];
+                short unitID = msg.ReadInt16();
+                short resourceID = msg.ReadInt16();
+
+                Unit unit = Player.Players[team].UnitArray[unitID];
+                Resource targetResource = Resource.ResourceArray[resourceID];
 
                 Player.Players[team].ScheduledActions.Add(new ScheduledUnitTargetedCommand(scheduledTime, new HarvestCommand(unit, targetResource), targetResource, queued));
             }
@@ -572,6 +554,19 @@ namespace rts
                 structure.Die();
         }
 
+        void processUnitCancelConfirmation(NetIncomingMessage msg)
+        {
+            short unitID = msg.ReadInt16();
+            short team = msg.ReadInt16();
+
+            Unit unit = Player.Players[team].UnitArray[unitID];
+
+            if (unit != null && unit != Unit.Reserved)
+            {
+                unit.RemoveWithoutAnimationOrMessage();
+            }
+        }
+
         /*void processPathUpdate(NetIncomingMessage msg)
         {
             //short commandID = msg.ReadInt16();
@@ -634,7 +629,16 @@ namespace rts
             }*/
         //}
 
-        void transmitStructureCommand(Structure s, CommandButtonType commandType, short unitID = short.MinValue)
+        void TransmitSync()
+        {
+            NetOutgoingMessage msg = netPeer.CreateMessage();
+            msg.Write(MessageID.SYNC);
+            msg.Write(GameClock);
+            msg.Write((short)connection.AverageRoundtripTime);
+            netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableSequenced, 0);
+        }
+
+        public void TransmitStructureCommand(Structure s, CommandButtonType commandType, short unitID = short.MinValue, short index = short.MinValue)
         {
             NetOutgoingMessage msg = netPeer.CreateMessage();
 
@@ -644,6 +648,18 @@ namespace rts
             msg.Write(s.ID);
             msg.Write(commandType.ID);
             msg.Write(unitID);
+            msg.Write(index);
+
+            netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        public void TransmitUnitCancelConfirmation(short unitID)
+        {
+            NetOutgoingMessage msg = netPeer.CreateMessage();
+
+            msg.Write(MessageID.UNIT_CANCEL_CONFIRMATION);
+            msg.Write(unitID);
+            msg.Write(Player.Me.Team);
 
             netPeer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
         }

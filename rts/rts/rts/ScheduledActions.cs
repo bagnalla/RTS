@@ -70,17 +70,21 @@ namespace rts
         }
     }
 
+    // index is assigned explicitly when cancelling a specific build queue item
     public class ScheduledStructureCommand : ScheduledAction
     {
         public Structure Structure { get; private set; }
         public CommandButtonType CommandType;
         public short ID { get; private set; }
+        public short Index { get; set; }
 
         public ScheduledStructureCommand(float scheduledTime, Structure structure, CommandButtonType commandType)
             : base(scheduledTime)
         {
             Structure = structure;
             CommandType = commandType;
+            ID = -1;
+            Index = -1;
         }
 
         public ScheduledStructureCommand(float scheduledTime, Structure structure, CommandButtonType commandType, short id)
@@ -89,6 +93,7 @@ namespace rts
             Structure = structure;
             CommandType = commandType;
             ID = id;
+            Index = -1;
         }
     }
 
